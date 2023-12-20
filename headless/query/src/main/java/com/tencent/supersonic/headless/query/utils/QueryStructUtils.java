@@ -146,6 +146,7 @@ public class QueryStructUtils {
                 return "";
             }
         }
+        // if model don't have time dim, just return ""
         ModelService modelService = ContextUtils.getBean(ModelService.class);
         ModelFilter modelFilter = new ModelFilter();
         modelFilter.setIds(queryStructCmd.getModelIds());
