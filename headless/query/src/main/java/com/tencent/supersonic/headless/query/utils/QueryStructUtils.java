@@ -13,6 +13,7 @@ import com.tencent.supersonic.common.pojo.DateConf;
 import com.tencent.supersonic.common.pojo.DateConf.DateMode;
 import com.tencent.supersonic.common.pojo.ItemDateResp;
 import com.tencent.supersonic.common.pojo.enums.TypeEnums;
+import com.tencent.supersonic.common.util.ContextUtils;
 import com.tencent.supersonic.common.util.DateModeUtils;
 import com.tencent.supersonic.common.util.SqlFilterUtils;
 import com.tencent.supersonic.common.util.StringUtil;
@@ -27,13 +28,17 @@ import com.tencent.supersonic.headless.api.model.response.DimSchemaResp;
 import com.tencent.supersonic.headless.api.model.response.DimensionResp;
 import com.tencent.supersonic.headless.api.model.response.MetricResp;
 import com.tencent.supersonic.headless.api.model.response.MetricSchemaResp;
+import com.tencent.supersonic.headless.api.model.response.ModelResp;
 import com.tencent.supersonic.headless.api.model.response.ModelSchemaResp;
 import com.tencent.supersonic.headless.api.query.request.ParseSqlReq;
 import com.tencent.supersonic.headless.api.query.request.QueryS2SQLReq;
 import com.tencent.supersonic.headless.api.query.request.QueryStructReq;
 import com.tencent.supersonic.headless.model.domain.Catalog;
+import com.tencent.supersonic.headless.model.domain.ModelService;
 import com.tencent.supersonic.headless.model.domain.pojo.EngineTypeEnum;
+import com.tencent.supersonic.headless.model.domain.pojo.ModelFilter;
 import com.tencent.supersonic.headless.query.service.SchemaService;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -140,6 +145,18 @@ public class QueryStructUtils {
             if (dateInfo.getUnit() <= 0) {
                 return "";
             }
+        }
+        ModelService modelService = ContextUtils.getBean(ModelService.class);
+        ModelFilter modelFilter = new ModelFilter();
+        modelFilter.setIds(queryStructCmd.getModelIds());
+        List<ModelResp> modelSchemaResps = modelService.getModelList(modelFilter);
+        if (CollectionUtils.isEmpty(modelSchemaResps)) {
+            return "";
+        }
+        boolean hasTimeDim = modelSchemaResps.stream()
+                .anyMatch(modelSchemaResp -> modelSchemaResp.getModelDetail().getTimeDims().size() > 0);
+        if (!hasTimeDim) {
+            return "";
         }
 
         List<Long> dimensionIds = getDimensionIds(queryStructCmd);

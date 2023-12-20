@@ -1,5 +1,6 @@
 package com.tencent.supersonic.headless.api.model.pojo;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import com.google.common.collect.Lists;
 import com.tencent.supersonic.headless.api.model.enums.DimensionTypeEnum;
 import lombok.Data;
@@ -32,6 +33,7 @@ public class ModelDetail {
         return sqlQuery;
     }
 
+    @JSONField(serialize = false)
     public List<Dim> getTimeDims() {
         if (CollectionUtils.isEmpty(dimensions)) {
             return Lists.newArrayList();
