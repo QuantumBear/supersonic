@@ -49,9 +49,9 @@ public class ModelClusterMapper implements SchemaMapper {
                                                         SemanticSchema semanticSchema) {
         Set<Long> matchedModels = schemaMapInfo.getMatchedModels();
         List<ModelCluster> modelClusters = ModelClusterBuilder.buildModelClusters(semanticSchema);
-        return modelClusters.stream().map(ModelCluster::getModelIds).peek(modelCluster -> {
-            modelCluster.removeIf(model -> !matchedModels.contains(model));
-        }).filter(modelCluster -> modelCluster.size() > 0).map(ModelCluster::build).collect(Collectors.toList());
+        return modelClusters.stream()
+            .map(ModelCluster::getModelIds)
+            .filter(modelCluster -> modelCluster.size() > 0).map(ModelCluster::build).collect(Collectors.toList());
     }
 
 }
