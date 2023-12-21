@@ -4,11 +4,15 @@ import com.google.common.collect.Lists;
 import com.tencent.supersonic.auth.api.authentication.pojo.User;
 import com.tencent.supersonic.chat.api.pojo.SchemaElementMatch;
 import com.tencent.supersonic.chat.api.pojo.SchemaElementType;
+import com.tencent.supersonic.chat.api.pojo.SemanticParseInfo;
 import com.tencent.supersonic.chat.api.pojo.request.QueryFilter;
 import com.tencent.supersonic.chat.api.pojo.request.QueryFilters;
 import com.tencent.supersonic.chat.api.pojo.request.QueryReq;
 import com.tencent.supersonic.chat.plugin.PluginParseResult;
 import com.tencent.supersonic.chat.query.BaseSemanticQuery;
+import com.tencent.supersonic.chat.query.plugin.ParamOption.ParamType;
+import com.tencent.supersonic.common.pojo.DateConf;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 import java.util.HashMap;
@@ -92,8 +96,29 @@ public abstract class PluginSemanticQuery extends BaseSemanticQuery {
                 paramOption.setValue(elementValue);
             }
         }
+        // 日期处理，如果有日期，需要加上日期参数
+        Optional<DateConf> dateConfOptional = getDateConf();
+        if (dateConfOptional.isPresent()) {
+            DateConf dateConf = dateConfOptional.get();
+            ParamOption paramOption = new ParamOption();
+            paramOption.setParamType(ParamType.CUSTOM);
+            paramOption.setKey("start_date");
+            paramOption.setValue(dateConf.getStartDate());
+            paramOptions.add(paramOption);
+
+            paramOption = new ParamOption();
+            paramOption.setParamType(ParamType.CUSTOM);
+            paramOption.setKey("end_date");
+            paramOption.setValue(dateConf.getEndDate());
+            paramOptions.add(paramOption);
+        }
         webBaseResult.setParamOptions(paramOptions);
         return webBaseResult;
+    }
+
+    protected Optional<DateConf> getDateConf() {
+        SemanticParseInfo parseInfo = super.getParseInfo();
+        return Optional.ofNullable(parseInfo).map(SemanticParseInfo::getDateInfo);
     }
 
 }

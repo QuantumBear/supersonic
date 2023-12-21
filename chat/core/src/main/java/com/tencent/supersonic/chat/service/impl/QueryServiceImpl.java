@@ -61,6 +61,7 @@ import com.tencent.supersonic.knowledge.utils.HanlpHelper;
 import com.tencent.supersonic.knowledge.utils.NatureHelper;
 import com.tencent.supersonic.headless.api.model.response.QueryResultWithSchemaResp;
 import com.tencent.supersonic.headless.api.query.request.QueryStructReq;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
@@ -188,6 +189,13 @@ public class QueryServiceImpl implements QueryService {
 
         // in order to support multi-turn conversation, chat context is needed
         ChatContext chatCtx = chatService.getOrCreateContext(queryReq.getChatId());
+
+        // copy date info from chat context's parseInfo to current ParseInfo if not exist
+        Optional<DateConf> dateConfOptional = Optional.ofNullable(chatCtx.getParseInfo().getDateInfo());
+        if (parseInfo.getDateInfo() == null) {
+            dateConfOptional.ifPresent(parseInfo::setDateInfo);
+        }
+
         chatCtx.setAgentId(queryReq.getAgentId());
         Long startTime = System.currentTimeMillis();
         QueryResult queryResult = semanticQuery.execute(queryReq.getUser());
