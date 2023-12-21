@@ -246,5 +246,21 @@
         "sql": "select 国家中文名, sum(销量) from 营销月模型 where 机型类别 = '智能机' and 数据日期 >= '2023-01-01' and 数据日期 <= '2023-11-01' group by 国家中文名 order by sum(销量) desc limit 1",
         "generatedSchemaLinkingCoT": "Let’s think step by step. In the question \"今年智能机在哪个国家的销量之和最高 (补充信息:’'智能机'‘是一个’机型类别‘。当前的日期是2023-11-01) (备注: )\", we are asked:\n\"国家的销量之和\" so we need column = [国家中文名]\n\"个国家的销量\" so we need column = [销量]\n\"’机型类别‘\" so we need column = [机型类别]\n\"当前的日期是\" so we need column = [数据日期]\nBased on the tables, columns, and Foreign_keys, The set of possible cell values are = [1,2023-11-01,智能机,2023-01-01]. So the Schema_links are:\nSchema_links: [国家中文名,销量,机型类别,数据日期,1,2023-11-01,智能机,2023-01-01]",
         "generatedSchemaLinkings": "[国家中文名,销量,机型类别,数据日期,1,2023-11-01,智能机,2023-01-01]"
+    },
+    {
+        "question":"最近一个月的分部门赢单数",
+        "questionAugmented":"最近一个月的分部门赢单数 (补充信息:’'赢单'‘是一个’商机阶段‘。当前的日期是2023-12-18) (备注: )",
+        "dbSchema": "Table: 商机, Columns = [\"部门\", \"商机阶段\", \"数据日期\", \"商机id\"]\nForeign_keys: []",
+        "sql":"select 部门, count(distinct 商机id) from 商机 where 商机阶段 = '赢单' and 数据日期 >= '2023-11-18' and 数据日期 <= '2023-12-18' group by 部门",
+        "generatedSchemaLinkingCoT":"Let's think step by step. In the question \"最近一个月的分部门赢单(补充信息:’'赢单'‘是一个’商机阶段‘。当前的日期是2023-12-18) (备注: )\",we are asked：\n\"分部门\"，so we need column=[部门]\n\"最近一个月\"，so we need column=[数据日期], \n\"赢单\"，so we need column=[商机阶段]\n\"数\"，so we need column=[商机id]\nBased on the tables, columns, and Foreign_keys, The set of possible cell values are = [2023-11-18,赢单,2023-12-18]. So the Schema_links are:\\nSchema_links: [部门,商机阶段,数据日期,商机id,2023-12-18,赢单,2023-11-18]",
+        "generatedSchemaLinkings": "[部门,商机阶段,数据日期,商机id,2023-12-18,赢单,2023-11-18]"
+    },
+    {
+        "question":"最近一个月的分部门丢单数",
+        "questionAugmented":"最近一个月的分部门丢单数 (补充信息:’'丢单'‘是一个’商机阶段‘。当前的日期是2023-12-18) (备注: )",
+        "dbSchema": "Table: 商机, Columns = [\"部门\", \"商机阶段\", \"数据日期\", \"商机id\"]\nForeign_keys: []",
+        "sql":"select 部门, count(distinct 商机id) from 商机 where 商机阶段 = '丢单' and 数据日期 >= '2023-11-18' and 数据日期 <= '2023-12-18' group by 部门",
+        "generatedSchemaLinkingCoT":"Let's think step by step. In the question \"最近一个月的分部门赢单(补充信息:’'丢单'‘是一个’商机阶段‘。当前的日期是2023-12-18) (备注: )\",we are asked：\n\"分部门\"，so we need column=[部门]\n\"最近一个月\"，so we need column=[数据日期], \n\"丢单\"，so we need column=[商机阶段]\n\"数\"，so we need column=[商机id]\nBased on the tables, columns, and Foreign_keys, The set of possible cell values are = [2023-11-18,丢单,2023-12-18]. So the Schema_links are:\\nSchema_links: [部门,商机阶段,数据日期,商机id,2023-12-18,丢单,2023-11-18]",
+        "generatedSchemaLinkings": "[部门,商机阶段,数据日期,商机id,2023-12-18,丢单,2023-11-18]"
     }
 ]
