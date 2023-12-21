@@ -1,5 +1,6 @@
 package com.tencent.supersonic.chat.query.plugin;
 
+import com.alibaba.fastjson.annotation.JSONField;
 import com.google.common.collect.Lists;
 import lombok.Data;
 import java.util.List;
@@ -11,6 +12,7 @@ public class WebBase {
 
     private List<ParamOption> paramOptions = Lists.newArrayList();
 
+    @JSONField(serialize = false)
     public List<ParamOption> getParams() {
         return paramOptions;
     }

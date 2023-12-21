@@ -223,7 +223,7 @@ public class PluginManager {
                 matchedModel.add(modelId);
                 continue;
             }
-            boolean matched = true;
+            boolean matched = false;
             for (ParamOption paramOption : params) {
                 Set<Long> elementIdSet = getSchemaElementMatch(modelId, schemaMapInfo);
                 if (CollectionUtils.isEmpty(elementIdSet)) {
@@ -231,9 +231,10 @@ public class PluginManager {
                     break;
                 }
                 if (!elementIdSet.contains(paramOption.getElementId())) {
-                    matched = false;
-                    break;
+                    removeParamOption(plugin, paramOption);
+                    continue;
                 }
+                matched = true;
             }
             if (matched) {
                 matchedModel.add(modelId);
@@ -270,6 +271,20 @@ public class PluginManager {
         return paramOptions.stream()
                 .filter(paramOption -> ParamOption.ParamType.SEMANTIC.equals(paramOption.getParamType()))
                 .collect(Collectors.toList());
+    }
+
+    private static void removeParamOption(Plugin plugin, ParamOption paramOption) {
+        WebBase webBase = JSONObject.parseObject(plugin.getConfig(), WebBase.class);
+        if (Objects.isNull(webBase)) {
+            return;
+        }
+        List<ParamOption> paramOptions = webBase.getParamOptions();
+        if (org.springframework.util.CollectionUtils.isEmpty(paramOptions)) {
+            return;
+        }
+        paramOptions.remove(paramOption);
+        webBase.setParamOptions(paramOptions);
+        plugin.setConfig(JSONObject.toJSONString(webBase));
     }
 
     private static Set<Long> getPluginMatchedModel(Plugin plugin, QueryContext queryContext) {
