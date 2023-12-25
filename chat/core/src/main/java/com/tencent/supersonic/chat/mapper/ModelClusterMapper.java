@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /***
@@ -47,7 +46,6 @@ public class ModelClusterMapper implements SchemaMapper {
 
     private List<ModelCluster> buildModelClusterMatched(SchemaMapInfo schemaMapInfo,
                                                         SemanticSchema semanticSchema) {
-        Set<Long> matchedModels = schemaMapInfo.getMatchedModels();
         List<ModelCluster> modelClusters = ModelClusterBuilder.buildModelClusters(semanticSchema);
         return modelClusters.stream()
             .map(ModelCluster::getModelIds)
