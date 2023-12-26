@@ -8,6 +8,7 @@
     <result column="display_name" jdbcType="VARCHAR" property="displayName" />
     <result column="email" jdbcType="VARCHAR" property="email" />
     <result column="is_admin" jdbcType="INTEGER" property="isAdmin" />
+    <result column="tenant_id" jdbcType="BIGINT" property="tenantId" />
   </resultMap>
   <sql id="Example_Where_Clause">
     <where>
@@ -39,7 +40,7 @@
     </where>
   </sql>
   <sql id="Base_Column_List">
-    id, name, password, display_name, email, is_admin
+    id, name, password, display_name, email, is_admin, tenant_id
   </sql>
   <select id="selectByExample" parameterType="com.tencent.supersonic.auth.authentication.persistence.dataobject.UserDOExample" resultMap="BaseResultMap">
     select
@@ -60,10 +61,10 @@
   </select>
   <insert id="insert" parameterType="com.tencent.supersonic.auth.authentication.persistence.dataobject.UserDO">
     insert into s2_user (id, name, password, 
-      display_name, email, is_admin
+      display_name, email, is_admin, tenant_id
       )
     values (#{id,jdbcType=BIGINT}, #{name,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, 
-      #{displayName,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR}, #{isAdmin,jdbcType=INTEGER}
+      #{displayName,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR}, #{isAdmin,jdbcType=INTEGER}, #{tenantId,jdbcType=BIGINT}
       )
   </insert>
   <insert id="insertSelective" parameterType="com.tencent.supersonic.auth.authentication.persistence.dataobject.UserDO">
@@ -87,6 +88,9 @@
       <if test="isAdmin != null">
         is_admin,
       </if>
+      <if test="tenantId != null">
+        tenant_id,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -106,6 +110,9 @@
       </if>
       <if test="isAdmin != null">
         #{isAdmin,jdbcType=INTEGER},
+      </if>
+      <if test="tenantId != null">
+        #{tenantId,jdbcType=BIGINT},
       </if>
     </trim>
   </insert>

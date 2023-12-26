@@ -20,17 +20,19 @@ public class User {
 
     private Integer isAdmin;
 
-    public static User get(Long id, String name, String displayName, String email, Integer isAdmin) {
-        return new User(id, name, displayName, email, isAdmin);
+    private Long tenantId;
+
+    public static User get(Long id, String name, String displayName, String email, Integer isAdmin, Long tenantId) {
+        return new User(id, name, displayName, email, isAdmin, tenantId);
     }
 
     public static User getFakeUser() {
-        return new User(1L, "admin", "admin", "admin@email", 1);
+        return new User(1L, "admin", "admin", "admin@email", 1, -1L);
     }
 
     public static User getAppUser(int appId) {
         String name = String.format("app_%s", appId);
-        return new User(1L, name, name, "", 1);
+        return new User(1L, name, name, "", 1, -1L);
     }
 
     public String getDisplayName() {

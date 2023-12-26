@@ -9,14 +9,16 @@ public class UserWithPassword extends User {
 
     private String password;
 
-    public UserWithPassword(Long id, String name, String displayName, String email, String password, Integer isAdmin) {
-        super(id, name, displayName, email, isAdmin);
+    public UserWithPassword(Long id, String name, String displayName, String email, String password,
+            Integer isAdmin, Long tenantId) {
+        super(id, name, displayName, email, isAdmin, tenantId);
         this.password = password;
     }
 
     public static UserWithPassword get(Long id, String name, String displayName,
-                                       String email, String password, Integer isAdmin) {
-        return new UserWithPassword(id, name, displayName, email, password, isAdmin);
+            String email, String password,
+            Integer isAdmin, Long tenantId) {
+        return new UserWithPassword(id, name, displayName, email, password, isAdmin, tenantId);
     }
 
 }

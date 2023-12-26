@@ -24,5 +24,5 @@ public class UserConstants {
 
     public static final String INTERNAL = "internal";
 
-
+    public static final String TOKEN_TENANT_ID = "token_tenant_id";
 }

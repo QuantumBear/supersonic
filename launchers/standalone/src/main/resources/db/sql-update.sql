@@ -164,3 +164,5 @@ CREATE TABLE `s2_app`
     updated_at  TIMESTAMP,
     updated_by  VARCHAR(255)
 );
+
+alter table s2_user add column `tenant_id` bigint DEFAULT NULL;

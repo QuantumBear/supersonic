@@ -1,19 +1,26 @@
 package com.tencent.supersonic.chat.corrector;
 
+import com.google.common.collect.Lists;
+import com.tencent.supersonic.auth.api.authentication.pojo.User;
 import com.tencent.supersonic.chat.api.pojo.SchemaElement;
 import com.tencent.supersonic.chat.api.pojo.SchemaValueMap;
 import com.tencent.supersonic.chat.api.pojo.SemanticParseInfo;
 import com.tencent.supersonic.chat.api.pojo.SemanticSchema;
+import com.tencent.supersonic.chat.api.pojo.request.QueryFilter;
 import com.tencent.supersonic.chat.api.pojo.request.QueryFilters;
 import com.tencent.supersonic.chat.api.pojo.request.QueryReq;
 import com.tencent.supersonic.chat.parser.sql.llm.S2SqlDateHelper;
 import com.tencent.supersonic.common.pojo.Constants;
+import com.tencent.supersonic.common.pojo.enums.FilterOperatorEnum;
 import com.tencent.supersonic.common.pojo.enums.TimeDimensionEnum;
 import com.tencent.supersonic.common.util.ContextUtils;
 import com.tencent.supersonic.common.util.StringUtil;
 import com.tencent.supersonic.common.util.jsqlparser.SqlParserAddHelper;
 import com.tencent.supersonic.common.util.jsqlparser.SqlParserReplaceHelper;
 import com.tencent.supersonic.common.util.jsqlparser.SqlParserSelectHelper;
+import com.tencent.supersonic.headless.api.model.response.DimensionResp;
+import com.tencent.supersonic.headless.model.domain.DimensionService;
+import com.tencent.supersonic.headless.model.domain.pojo.MetaFilter;
 import com.tencent.supersonic.knowledge.service.SchemaService;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.JSQLParserException;
@@ -49,6 +56,13 @@ public class WhereCorrector extends BaseSemanticCorrector {
     }
 
     private void addQueryFilter(QueryReq queryReq, SemanticParseInfo semanticParseInfo) {
+        QueryFilter tenantQueryFilter = getTenantDefaultFilters(queryReq, semanticParseInfo);
+        if (Objects.nonNull(tenantQueryFilter)) {
+            if (queryReq.getQueryFilters() == null) {
+                queryReq.setQueryFilters(new QueryFilters());
+            }
+            queryReq.getQueryFilters().getFilters().add(tenantQueryFilter);
+        }
         String queryFilter = getQueryFilter(queryReq.getQueryFilters());
 
         String correctS2SQL = semanticParseInfo.getSqlInfo().getCorrectS2SQL();
@@ -75,15 +89,42 @@ public class WhereCorrector extends BaseSemanticCorrector {
     private void addDateIfNotExist(SemanticParseInfo semanticParseInfo) {
         String correctS2SQL = semanticParseInfo.getSqlInfo().getCorrectS2SQL();
         List<String> whereFields = SqlParserSelectHelper.getWhereFields(correctS2SQL);
-        if (CollectionUtils.isEmpty(whereFields) || !TimeDimensionEnum.containsZhTimeDimension(whereFields)) {
+        if (CollectionUtils.isEmpty(whereFields)
+                || !TimeDimensionEnum.containsZhTimeDimension(whereFields)) {
             String currentDate = S2SqlDateHelper.getReferenceDate(semanticParseInfo.getModelId());
             if (StringUtils.isNotBlank(currentDate)) {
                 correctS2SQL = SqlParserAddHelper.addParenthesisToWhere(correctS2SQL);
                 correctS2SQL = SqlParserAddHelper.addWhere(
-                        correctS2SQL, TimeDimensionEnum.DAY.getChName(), currentDate);
+                    correctS2SQL, TimeDimensionEnum.DAY.getChName(), currentDate);
             }
         }
         semanticParseInfo.getSqlInfo().setCorrectS2SQL(correctS2SQL);
+    }
+
+    // TODO: currently we use user name as tenantId, will add tenantId field in User in the future.
+    private QueryFilter getTenantDefaultFilters(QueryReq queryReq,
+            SemanticParseInfo semanticParseInfo) {
+        User user = queryReq.getUser();
+        if (Objects.isNull(user)) {
+            return null;
+        }
+        Long tenantId = user.getTenantId();
+        if (tenantId == null || tenantId == 0 || tenantId == -1) {
+            return null;
+        }
+        Long modelId = semanticParseInfo.getModelId();
+        DimensionService dimensionService = ContextUtils.getBean(DimensionService.class);
+        List<DimensionResp> modelCluster = dimensionService.getDimensions(
+            new MetaFilter(Lists.newArrayList(modelId)));
+        Map<String, DimensionResp> dimensionRespMap = modelCluster.stream()
+                .collect(Collectors.groupingBy(DimensionResp::getBizName,
+                Collectors.collectingAndThen(Collectors.toList(), value -> value.get(0))));
+
+        DimensionResp tenantIdDim = dimensionRespMap.get(Constants.TENANT_BIZ_NAME);
+
+        return getFilter(
+                Constants.TENANT_BIZ_NAME,
+                FilterOperatorEnum.EQUALS, tenantId, tenantIdDim.getName(), tenantIdDim.getId());
     }
 
     private String getQueryFilter(QueryFilters queryFilters) {
@@ -91,17 +132,18 @@ public class WhereCorrector extends BaseSemanticCorrector {
             return null;
         }
         return queryFilters.getFilters().stream()
-                .map(filter -> {
-                    String bizNameWrap = StringUtil.getSpaceWrap(filter.getName());
-                    String operatorWrap = StringUtil.getSpaceWrap(filter.getOperator().getValue());
-                    String valueWrap = StringUtil.getCommaWrap(filter.getValue().toString());
-                    return bizNameWrap + operatorWrap + valueWrap;
-                })
-                .collect(Collectors.joining(Constants.AND_UPPER));
+            .map(filter -> {
+                String bizNameWrap = StringUtil.getSpaceWrap(filter.getName());
+                String operatorWrap = StringUtil.getSpaceWrap(filter.getOperator().getValue());
+                String valueWrap = StringUtil.getCommaWrap(filter.getValue().toString());
+                return bizNameWrap + operatorWrap + valueWrap;
+            })
+            .collect(Collectors.joining(Constants.AND_UPPER));
     }
 
     private void updateFieldValueByTechName(SemanticParseInfo semanticParseInfo) {
-        SemanticSchema semanticSchema = ContextUtils.getBean(SchemaService.class).getSemanticSchema();
+        SemanticSchema semanticSchema = ContextUtils.getBean(SchemaService.class)
+                .getSemanticSchema();
         Set<Long> modelIds = semanticParseInfo.getModel().getModelIds();
         List<SchemaElement> dimensions = semanticSchema.getDimensions(modelIds);
 
@@ -109,13 +151,16 @@ public class WhereCorrector extends BaseSemanticCorrector {
             return;
         }
 
-        Map<String, Map<String, String>> aliasAndBizNameToTechName = getAliasAndBizNameToTechName(dimensions);
-        String correctS2SQL = SqlParserReplaceHelper.replaceValue(semanticParseInfo.getSqlInfo().getCorrectS2SQL(),
+        Map<String, Map<String, String>> aliasAndBizNameToTechName = getAliasAndBizNameToTechName(
+                dimensions);
+        String correctS2SQL = SqlParserReplaceHelper.replaceValue(
+                semanticParseInfo.getSqlInfo().getCorrectS2SQL(),
                 aliasAndBizNameToTechName);
         semanticParseInfo.getSqlInfo().setCorrectS2SQL(correctS2SQL);
     }
 
-    private Map<String, Map<String, String>> getAliasAndBizNameToTechName(List<SchemaElement> dimensions) {
+    private Map<String, Map<String, String>> getAliasAndBizNameToTechName(
+            List<SchemaElement> dimensions) {
         if (CollectionUtils.isEmpty(dimensions)) {
             return new HashMap<>();
         }
@@ -152,5 +197,16 @@ public class WhereCorrector extends BaseSemanticCorrector {
             }
         }
         return result;
+    }
+
+    public static QueryFilter getFilter(String bizName, FilterOperatorEnum filterOperatorEnum,
+            Object value, String name, Long elementId) {
+        QueryFilter filter = new QueryFilter();
+        filter.setBizName(bizName);
+        filter.setOperator(filterOperatorEnum);
+        filter.setValue(value);
+        filter.setName(name);
+        filter.setElementID(elementId);
+        return filter;
     }
 }

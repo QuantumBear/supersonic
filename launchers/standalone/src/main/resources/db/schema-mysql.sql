@@ -423,6 +423,7 @@ create table s2_user
     password varchar(100) null,
     email varchar(100) null,
     is_admin int(11) null,
+    tenant_id bigint(20) null,
     PRIMARY KEY (`id`)
 );
 

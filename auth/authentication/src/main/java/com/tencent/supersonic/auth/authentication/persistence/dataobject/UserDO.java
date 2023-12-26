@@ -31,6 +31,8 @@ public class UserDO {
      */
     private Integer isAdmin;
 
+    private Long tenantId;
+
     /**
      * 
      * @return id 
@@ -125,5 +127,13 @@ public class UserDO {
      */
     public void setIsAdmin(Integer isAdmin) {
         this.isAdmin = isAdmin;
+    }
+
+    public Long getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
     }
 }

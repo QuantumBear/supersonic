@@ -4,6 +4,7 @@ import static com.tencent.supersonic.auth.api.authentication.constant.UserConsta
 import static com.tencent.supersonic.auth.api.authentication.constant.UserConstants.TOKEN_CREATE_TIME;
 import static com.tencent.supersonic.auth.api.authentication.constant.UserConstants.TOKEN_IS_ADMIN;
 import static com.tencent.supersonic.auth.api.authentication.constant.UserConstants.TOKEN_PREFIX;
+import static com.tencent.supersonic.auth.api.authentication.constant.UserConstants.TOKEN_TENANT_ID;
 import static com.tencent.supersonic.auth.api.authentication.constant.UserConstants.TOKEN_TIME_OUT;
 import static com.tencent.supersonic.auth.api.authentication.constant.UserConstants.TOKEN_USER_DISPLAY_NAME;
 import static com.tencent.supersonic.auth.api.authentication.constant.UserConstants.TOKEN_USER_EMAIL;
@@ -44,6 +45,7 @@ public class UserTokenUtils {
         claims.put(TOKEN_USER_DISPLAY_NAME, user.getDisplayName());
         claims.put(TOKEN_CREATE_TIME, System.currentTimeMillis());
         claims.put(TOKEN_IS_ADMIN, user.getIsAdmin());
+        claims.put(TOKEN_TENANT_ID, user.getTenantId());
         return generate(claims);
     }
 
@@ -55,6 +57,7 @@ public class UserTokenUtils {
         claims.put(TOKEN_USER_DISPLAY_NAME, "admin");
         claims.put(TOKEN_CREATE_TIME, System.currentTimeMillis());
         claims.put(TOKEN_IS_ADMIN, 1);
+        claims.put(TOKEN_TENANT_ID, -1);
         return generate(claims);
     }
 
@@ -67,7 +70,8 @@ public class UserTokenUtils {
         String displayName = String.valueOf(claims.get(TOKEN_USER_DISPLAY_NAME));
         Integer isAdmin = claims.get(TOKEN_IS_ADMIN) == null
                 ? 0 : Integer.parseInt(claims.get(TOKEN_IS_ADMIN).toString());
-        return User.get(userId, userName, displayName, email, isAdmin);
+        Long tenantId = Long.parseLong(claims.getOrDefault(TOKEN_TENANT_ID, 0).toString());
+        return User.get(userId, userName, displayName, email, isAdmin, tenantId);
     }
 
     public UserWithPassword getUserWithPassword(HttpServletRequest request) {
@@ -83,9 +87,10 @@ public class UserTokenUtils {
         String email = String.valueOf(claims.get(TOKEN_USER_EMAIL));
         String displayName = String.valueOf(claims.get(TOKEN_USER_DISPLAY_NAME));
         String password = String.valueOf(claims.get(TOKEN_USER_PASSWORD));
+        Long tenantId = Long.parseLong(claims.getOrDefault(TOKEN_TENANT_ID, 0).toString());
         Integer isAdmin = claims.get(TOKEN_IS_ADMIN) == null
                 ? 0 : Integer.parseInt(claims.get(TOKEN_IS_ADMIN).toString());
-        return UserWithPassword.get(userId, userName, displayName, email, password, isAdmin);
+        return UserWithPassword.get(userId, userName, displayName, email, password, isAdmin, tenantId);
     }
 
     private Claims getClaims(String token) {

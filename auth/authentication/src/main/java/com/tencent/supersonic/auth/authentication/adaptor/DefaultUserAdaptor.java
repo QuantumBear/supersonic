@@ -74,7 +74,7 @@ public class DefaultUserAdaptor implements UserAdaptor {
         }
         if (userDO.getPassword().equals(userReq.getPassword())) {
             UserWithPassword user = UserWithPassword.get(userDO.getId(), userDO.getName(), userDO.getDisplayName(),
-                    userDO.getEmail(), userDO.getPassword(), userDO.getIsAdmin());
+                    userDO.getEmail(), userDO.getPassword(), userDO.getIsAdmin(), userDO.getTenantId());
             return userTokenUtils.generateToken(user);
         }
         throw new RuntimeException("password not correct, please try again");
