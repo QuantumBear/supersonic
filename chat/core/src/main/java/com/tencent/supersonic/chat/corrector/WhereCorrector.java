@@ -101,7 +101,6 @@ public class WhereCorrector extends BaseSemanticCorrector {
         semanticParseInfo.getSqlInfo().setCorrectS2SQL(correctS2SQL);
     }
 
-    // TODO: currently we use user name as tenantId, will add tenantId field in User in the future.
     private QueryFilter getTenantDefaultFilters(QueryReq queryReq,
             SemanticParseInfo semanticParseInfo) {
         User user = queryReq.getUser();

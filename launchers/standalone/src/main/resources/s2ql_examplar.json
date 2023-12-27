@@ -260,7 +260,7 @@
         "questionAugmented":"最近一个月的分部门丢单数 (补充信息:’'丢单'‘是一个’商机阶段‘。当前的日期是2023-12-18) (备注: )",
         "dbSchema": "Table: 商机, Columns = [\"部门\", \"商机阶段\", \"数据日期\", \"商机id\"]\nForeign_keys: []",
         "sql":"select 部门, count(distinct 商机id) from 商机 where 商机阶段 = '丢单' and 数据日期 >= '2023-11-18' and 数据日期 <= '2023-12-18' group by 部门",
-        "generatedSchemaLinkingCoT":"Let's think step by step. In the question \"最近一个月的分部门赢单(补充信息:’'丢单'‘是一个’商机阶段‘。当前的日期是2023-12-18) (备注: )\",we are asked：\n\"分部门\"，so we need column=[部门]\n\"最近一个月\"，so we need column=[数据日期], \n\"丢单\"，so we need column=[商机阶段]\n\"数\"，so we need column=[商机id]\nBased on the tables, columns, and Foreign_keys, The set of possible cell values are = [2023-11-18,丢单,2023-12-18]. So the Schema_links are:\\nSchema_links: [部门,商机阶段,数据日期,商机id,2023-12-18,丢单,2023-11-18]",
+        "generatedSchemaLinkingCoT":"Let's think step by step. In the question \"最近一个月的分部门丢单(补充信息:’'丢单'‘是一个’商机阶段‘。当前的日期是2023-12-18) (备注: )\",we are asked：\n\"分部门\"，so we need column=[部门]\n\"最近一个月\"，so we need column=[数据日期], \n\"丢单\"，so we need column=[商机阶段]\n\"数\"，so we need column=[商机id]\nBased on the tables, columns, and Foreign_keys, The set of possible cell values are = [2023-11-18,丢单,2023-12-18]. So the Schema_links are:\\nSchema_links: [部门,商机阶段,数据日期,商机id,2023-12-18,丢单,2023-11-18]",
         "generatedSchemaLinkings": "[部门,商机阶段,数据日期,商机id,2023-12-18,丢单,2023-11-18]"
     }
 ]
