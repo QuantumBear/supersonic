@@ -58,7 +58,7 @@ public abstract class PluginParser implements SemanticParser {
     public void buildQuery(QueryContext queryContext, PluginRecallResult pluginRecallResult) {
         Plugin plugin = pluginRecallResult.getPlugin();
         Set<Long> modelIds = pluginRecallResult.getModelIds();
-        if (plugin.isContainsAllModel()) {
+        if (plugin.isContainsAllModel() || CollectionUtils.isEmpty(modelIds)) {
             modelIds = Sets.newHashSet(-1L);
         }
         for (Long modelId : modelIds) {

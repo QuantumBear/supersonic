@@ -76,7 +76,8 @@ public abstract class PluginSemanticQuery extends BaseSemanticQuery {
         return elementValueMap;
     }
 
-    protected WebBase fillWebBaseResult(WebBase webPage, PluginParseResult pluginParseResult) {
+    protected WebBase fillWebBaseResult(WebBase webPage, User user,
+            PluginParseResult pluginParseResult) {
         WebBase webBaseResult = new WebBase();
         webBaseResult.setUrl(webPage.getUrl());
         Map<String, Object> elementValueMap = getElementMap(pluginParseResult);
@@ -87,13 +88,15 @@ public abstract class PluginSemanticQuery extends BaseSemanticQuery {
                         && !parseInfo.getModel().getModelIds().contains(paramOption.getModelId())) {
                     continue;
                 }
-                paramOptions.add(paramOption);
                 if (!ParamOption.ParamType.SEMANTIC.equals(paramOption.getParamType())) {
                     continue;
                 }
                 String elementId = String.valueOf(paramOption.getElementId());
                 Object elementValue = elementValueMap.get(elementId);
-                paramOption.setValue(elementValue);
+                if (elementValue != null) {
+                    paramOption.setValue(elementValue);
+                    paramOptions.add(paramOption);
+                }
             }
         }
         // 日期处理，如果有日期，需要加上日期参数
@@ -110,6 +113,14 @@ public abstract class PluginSemanticQuery extends BaseSemanticQuery {
             paramOption.setParamType(ParamType.CUSTOM);
             paramOption.setKey("end_date");
             paramOption.setValue(dateConf.getEndDate());
+            paramOptions.add(paramOption);
+        }
+        // 租户处理，如果有租户，需要加上租户参数
+        if (user.getTenantId() != null && user.getTenantId() > 0) {
+            ParamOption paramOption = new ParamOption();
+            paramOption.setParamType(ParamType.CUSTOM);
+            paramOption.setKey("tenant_id");
+            paramOption.setValue(user.getTenantId());
             paramOptions.add(paramOption);
         }
         webBaseResult.setParamOptions(paramOptions);

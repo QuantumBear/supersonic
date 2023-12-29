@@ -37,20 +37,20 @@ public class WebPageQuery extends PluginSemanticQuery {
         Map<String, Object> properties = parseInfo.getProperties();
         PluginParseResult pluginParseResult = JsonUtil.toObject(JsonUtil.toString(properties.get(Constants.CONTEXT)),
                 PluginParseResult.class);
-        WebPageResp webPageResponse = buildResponse(pluginParseResult);
+        WebPageResp webPageResponse = buildResponse(pluginParseResult, user);
         queryResult.setResponse(webPageResponse);
         queryResult.setQueryState(QueryState.SUCCESS);
         return queryResult;
     }
 
-    protected WebPageResp buildResponse(PluginParseResult pluginParseResult) {
+    protected WebPageResp buildResponse(PluginParseResult pluginParseResult, User user) {
         Plugin plugin = pluginParseResult.getPlugin();
         WebPageResp webPageResponse = new WebPageResp();
         webPageResponse.setName(plugin.getName());
         webPageResponse.setPluginId(plugin.getId());
         webPageResponse.setPluginType(plugin.getType());
         WebBase webPage = JsonUtil.toObject(plugin.getConfig(), WebBase.class);
-        WebBase webBase = fillWebBaseResult(webPage, pluginParseResult);
+        WebBase webBase = fillWebBaseResult(webPage, user, pluginParseResult);
         webPageResponse.setWebPage(webBase);
         return webPageResponse;
     }

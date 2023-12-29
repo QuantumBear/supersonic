@@ -29,7 +29,7 @@ public class ModelClusterMapper implements SchemaMapper {
         SchemaService schemaService = ContextUtils.getBean(SchemaService.class);
         SemanticSchema semanticSchema = schemaService.getSemanticSchema();
         SchemaMapInfo schemaMapInfo = queryContext.getMapInfo();
-        List<ModelCluster> modelClusters = buildModelClusterMatched(schemaMapInfo, semanticSchema);
+        List<ModelCluster> modelClusters = buildModelClusterMatched(semanticSchema);
         Map<String, List<SchemaElementMatch>> modelClusterElementMatches = new HashMap<>();
         for (ModelCluster modelCluster : modelClusters) {
             for (Long modelId : schemaMapInfo.getMatchedModels()) {
@@ -44,8 +44,7 @@ public class ModelClusterMapper implements SchemaMapper {
         queryContext.setModelClusterMapInfo(modelClusterMapInfo);
     }
 
-    private List<ModelCluster> buildModelClusterMatched(SchemaMapInfo schemaMapInfo,
-                                                        SemanticSchema semanticSchema) {
+    private List<ModelCluster> buildModelClusterMatched(SemanticSchema semanticSchema) {
         List<ModelCluster> modelClusters = ModelClusterBuilder.buildModelClusters(semanticSchema);
         return modelClusters.stream()
             .map(ModelCluster::getModelIds)

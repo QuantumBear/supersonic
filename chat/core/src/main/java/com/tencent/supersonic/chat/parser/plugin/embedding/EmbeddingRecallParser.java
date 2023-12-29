@@ -58,9 +58,6 @@ public class EmbeddingRecallParser extends PluginParser {
             log.info("embedding plugin resolve: {}", pair);
             if (pair.getLeft()) {
                 Set<Long> modelList = pair.getRight();
-                if (CollectionUtils.isEmpty(modelList)) {
-                    continue;
-                }
                 plugin.setParseMode(ParseMode.EMBEDDING_RECALL);
                 double distance = embeddingRetrieval.getDistance();
                 double score = queryContext.getRequest().getQueryText().length() * (1 - distance);

@@ -11,6 +11,7 @@ import com.tencent.supersonic.chat.api.pojo.SchemaElement;
 import com.tencent.supersonic.chat.api.pojo.SchemaElementMatch;
 import com.tencent.supersonic.chat.api.pojo.SchemaElementType;
 import com.tencent.supersonic.chat.api.pojo.SchemaMapInfo;
+import com.tencent.supersonic.chat.api.pojo.SchemaModelClusterMapInfo;
 import com.tencent.supersonic.chat.plugin.event.PluginAddEvent;
 import com.tencent.supersonic.chat.plugin.event.PluginDelEvent;
 import com.tencent.supersonic.chat.plugin.event.PluginUpdateEvent;
@@ -223,25 +224,14 @@ public class PluginManager {
                 matchedModel.add(modelId);
                 continue;
             }
-            boolean matched = false;
             for (ParamOption paramOption : params) {
                 Set<Long> elementIdSet = getSchemaElementMatch(modelId, schemaMapInfo);
-                if (CollectionUtils.isEmpty(elementIdSet)) {
-                    matched = false;
-                    break;
-                }
                 if (!elementIdSet.contains(paramOption.getElementId())) {
                     removeParamOption(plugin, paramOption);
-                    continue;
+                } else {
+                    matchedModel.add(modelId);
                 }
-                matched = true;
             }
-            if (matched) {
-                matchedModel.add(modelId);
-            }
-        }
-        if (CollectionUtils.isEmpty(matchedModel)) {
-            return Pair.of(false, Sets.newHashSet());
         }
         return Pair.of(true, matchedModel);
     }
@@ -289,13 +279,19 @@ public class PluginManager {
 
     private static Set<Long> getPluginMatchedModel(Plugin plugin, QueryContext queryContext) {
         Set<Long> matchedModel = queryContext.getMapInfo().getMatchedModels();
+        // include cluster models
+        SchemaModelClusterMapInfo modelClusterMapInfo = queryContext.getModelClusterMapInfo();
+        Set<Long> clusterModel = modelClusterMapInfo.getModelElementMatches().entrySet().stream()
+                .flatMap(entry ->
+                entry.getValue().stream().map(element -> element.getElement().getModel()))
+                .collect(Collectors.toSet());
         if (plugin.isContainsAllModel()) {
             return Sets.newHashSet(plugin.getDefaultMode());
         }
         List<Long> modelIds = plugin.getModelList();
         Set<Long> pluginMatchedModel = Sets.newHashSet();
         for (Long modelId : modelIds) {
-            if (matchedModel.contains(modelId)) {
+            if (matchedModel.contains(modelId) || clusterModel.contains(modelId)) {
                 pluginMatchedModel.add(modelId);
             }
         }

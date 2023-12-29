@@ -62,9 +62,6 @@ public class FunctionCallParser extends PluginParser {
         Pair<Boolean, Set<Long>> pluginResolveResult = PluginManager.resolve(plugin, queryContext);
         if (pluginResolveResult.getLeft()) {
             Set<Long> modelList = pluginResolveResult.getRight();
-            if (CollectionUtils.isEmpty(modelList)) {
-                return null;
-            }
             double score = queryContext.getRequest().getQueryText().length();
             return PluginRecallResult.builder().plugin(plugin).modelIds(modelList).score(score).build();
         }
