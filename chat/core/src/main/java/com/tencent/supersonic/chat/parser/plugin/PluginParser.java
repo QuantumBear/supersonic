@@ -11,6 +11,7 @@ import com.tencent.supersonic.chat.api.pojo.SchemaElementType;
 import com.tencent.supersonic.chat.api.pojo.SemanticParseInfo;
 import com.tencent.supersonic.chat.api.pojo.request.QueryFilter;
 import com.tencent.supersonic.chat.api.pojo.request.QueryReq;
+import com.tencent.supersonic.chat.api.pojo.response.SqlInfo;
 import com.tencent.supersonic.chat.plugin.Plugin;
 import com.tencent.supersonic.chat.plugin.PluginManager;
 import com.tencent.supersonic.chat.plugin.PluginParseResult;
@@ -20,6 +21,8 @@ import com.tencent.supersonic.chat.query.plugin.PluginSemanticQuery;
 import com.tencent.supersonic.common.pojo.Constants;
 import com.tencent.supersonic.common.pojo.ModelCluster;
 import com.tencent.supersonic.common.pojo.enums.FilterOperatorEnum;
+import com.tencent.supersonic.common.util.jsqlparser.FieldExpression;
+import com.tencent.supersonic.common.util.jsqlparser.SqlParserSelectHelper;
 import org.springframework.util.CollectionUtils;
 
 import java.util.HashMap;
@@ -70,8 +73,88 @@ public abstract class PluginParser implements SemanticParser {
             semanticParseInfo.setQueryMode(pluginQuery.getQueryMode());
             semanticParseInfo.setScore(pluginRecallResult.getScore());
             pluginQuery.setParseInfo(semanticParseInfo);
+            fillSqlFields(queryContext, semanticParseInfo);
             queryContext.getCandidateQueries().add(pluginQuery);
         }
+    }
+
+    private void fillSqlFields(QueryContext queryContext, SemanticParseInfo semanticParseInfo) {
+        List<SemanticQuery> candidateQueries = queryContext.getCandidateQueries();
+        if (CollectionUtils.isEmpty(candidateQueries)) {
+            return;
+        }
+        SemanticQuery sqlQuery = candidateQueries.get(0);
+        if (sqlQuery.getParseInfo() != null) {
+            SqlInfo sqlInfo = sqlQuery.getParseInfo().getSqlInfo();
+
+            List<SchemaElementMatch> schemaElementMatches = sqlQuery.getParseInfo().getElementMatches();
+            if (CollectionUtils.isEmpty(schemaElementMatches)) {
+                return;
+            }
+            if (semanticParseInfo.getSqlInfo() == null) {
+                semanticParseInfo.setSqlInfo(new SqlInfo());
+            }
+            SqlInfo targetSqlInfo = semanticParseInfo.getSqlInfo();
+            targetSqlInfo.setFilterFields(getFilterFields(sqlInfo, schemaElementMatches));
+            targetSqlInfo.setSelectFields(getSelectFields(sqlInfo, schemaElementMatches));
+        }
+    }
+
+    private Map<String, String> getFilterFields(SqlInfo sqlInfo, List<SchemaElementMatch> schemaElementMatches) {
+        Map<String, String> result = new HashMap<>();
+        List<FieldExpression> fieldExpressions =
+                SqlParserSelectHelper.getFilterExpression(sqlInfo.getS2SQL());
+        for (FieldExpression fieldExpression : fieldExpressions) {
+            String fieldName = fieldExpression.getFieldName();
+            // convert field name to schema element name
+            boolean findMatch = false;
+            for (SchemaElementMatch schemaElementMatch : schemaElementMatches) {
+                if (schemaElementMatch.getElement().getName().equals(fieldName)
+                        || schemaElementMatch.getElement().getBizName().equals(fieldName)
+                        || schemaElementMatch.getElement().getAlias().contains(fieldName)) {
+                    fieldName = schemaElementMatch.getElement().getBizName();
+                    findMatch = true;
+                    break;
+                }
+            }
+            // 只有找到对应的element才放入filterFields
+            if (findMatch) {
+                String fieldValue = fieldExpression.getFieldValue().toString();
+                if (fieldName != null && fieldValue != null) {
+                    result.put(fieldName, fieldExpression.getOperator() + " " + fieldValue);
+                }
+            }
+        }
+        return result;
+    }
+
+    private List<String> getSelectFields(SqlInfo sqlInfo, List<SchemaElementMatch> schemaElementMatches) {
+        List<String> result = Lists.newArrayList();
+        List<String> selectFields = SqlParserSelectHelper.getSelectFields(sqlInfo.getS2SQL());
+        if (CollectionUtils.isEmpty(selectFields)) {
+            return result;
+        }
+        String matchedSelectField = null;
+        for (String selectField : selectFields) {
+            // convert field name to schema element name
+            boolean findMatch = false;
+            for (SchemaElementMatch schemaElementMatch : schemaElementMatches) {
+                if ((schemaElementMatch.getElement().getType() == SchemaElementType.DIMENSION
+                        || schemaElementMatch.getElement().getType() == SchemaElementType.METRIC)
+                        && schemaElementMatch.getElement().getName().equals(selectField)
+                        || schemaElementMatch.getElement().getBizName().equals(selectField)
+                        || schemaElementMatch.getElement().getAlias().contains(selectField)) {
+                    matchedSelectField = schemaElementMatch.getElement().getBizName();
+                    findMatch = true;
+                    break;
+                }
+            }
+            // 只有找到对应的element才放入selectFields
+            if (findMatch) {
+                result.add(matchedSelectField);
+            }
+        }
+        return result;
     }
 
     protected List<Plugin> getPluginList(QueryContext queryContext) {

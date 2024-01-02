@@ -1,5 +1,6 @@
 package com.tencent.supersonic.chat.query.plugin;
 
+import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.tencent.supersonic.auth.api.authentication.pojo.User;
 import com.tencent.supersonic.chat.api.pojo.SchemaElementMatch;
@@ -8,6 +9,7 @@ import com.tencent.supersonic.chat.api.pojo.SemanticParseInfo;
 import com.tencent.supersonic.chat.api.pojo.request.QueryFilter;
 import com.tencent.supersonic.chat.api.pojo.request.QueryFilters;
 import com.tencent.supersonic.chat.api.pojo.request.QueryReq;
+import com.tencent.supersonic.chat.api.pojo.response.SqlInfo;
 import com.tencent.supersonic.chat.plugin.PluginParseResult;
 import com.tencent.supersonic.chat.query.BaseSemanticQuery;
 import com.tencent.supersonic.chat.query.plugin.ParamOption.ParamType;
@@ -123,6 +125,24 @@ public abstract class PluginSemanticQuery extends BaseSemanticQuery {
             paramOption.setValue(user.getTenantId());
             paramOptions.add(paramOption);
         }
+        // filterFieldsMap处理，如果有filterFieldsMap，需要加上filterFieldsMap参数
+        Optional<Map<String, String>> filterFieldsMapOptional = getFilterFieldsMap();
+        if (filterFieldsMapOptional.isPresent()) {
+            Map<String, String> filterFieldsMap = filterFieldsMapOptional.get();
+            ParamOption paramOption = new ParamOption();
+            paramOption.setParamType(ParamType.CUSTOM);
+            paramOption.setKey("filter_fields_map");
+            paramOption.setValue(JSON.toJSONString(filterFieldsMap));
+        }
+        // selectFields处理，如果有selectFields，需要加上selectFields参数
+        Optional<List<String>> selectFieldsOptional = getSelectFields();
+        if (selectFieldsOptional.isPresent()) {
+            List<String> selectFields = selectFieldsOptional.get();
+            ParamOption paramOption = new ParamOption();
+            paramOption.setParamType(ParamType.CUSTOM);
+            paramOption.setKey("select_fields");
+            paramOption.setValue(JSON.toJSONString(selectFields));
+        }
         webBaseResult.setParamOptions(paramOptions);
         return webBaseResult;
     }
@@ -130,6 +150,18 @@ public abstract class PluginSemanticQuery extends BaseSemanticQuery {
     protected Optional<DateConf> getDateConf() {
         SemanticParseInfo parseInfo = super.getParseInfo();
         return Optional.ofNullable(parseInfo).map(SemanticParseInfo::getDateInfo);
+    }
+
+    protected Optional<Map<String, String>> getFilterFieldsMap() {
+        SemanticParseInfo parseInfo = super.getParseInfo();
+        SqlInfo sqlInfo = parseInfo.getSqlInfo();
+        return Optional.ofNullable(sqlInfo).map(SqlInfo::getFilterFields);
+    }
+
+    protected Optional<List<String>> getSelectFields() {
+        SemanticParseInfo parseInfo = super.getParseInfo();
+        SqlInfo sqlInfo = parseInfo.getSqlInfo();
+        return Optional.ofNullable(sqlInfo).map(SqlInfo::getSelectFields);
     }
 
 }
