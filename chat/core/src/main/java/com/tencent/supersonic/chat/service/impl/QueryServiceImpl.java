@@ -54,15 +54,14 @@ import com.tencent.supersonic.common.util.jsqlparser.SqlParserAddHelper;
 import com.tencent.supersonic.common.util.jsqlparser.SqlParserRemoveHelper;
 import com.tencent.supersonic.common.util.jsqlparser.SqlParserReplaceHelper;
 import com.tencent.supersonic.common.util.jsqlparser.SqlParserSelectHelper;
-import com.tencent.supersonic.headless.common.core.request.QueryStructReq;
-import com.tencent.supersonic.headless.common.server.response.QueryResultWithSchemaResp;
 import com.tencent.supersonic.knowledge.dictionary.HanlpMapResult;
 import com.tencent.supersonic.knowledge.dictionary.MultiCustomDictionary;
 import com.tencent.supersonic.knowledge.service.SearchService;
 import com.tencent.supersonic.knowledge.utils.HanlpHelper;
 import com.tencent.supersonic.knowledge.utils.NatureHelper;
 import java.util.Optional;
-
+import com.tencent.supersonic.headless.api.response.QueryResultWithSchemaResp;
+import com.tencent.supersonic.headless.api.request.QueryStructReq;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
