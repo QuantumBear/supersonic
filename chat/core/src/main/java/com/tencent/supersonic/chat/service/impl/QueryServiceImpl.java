@@ -62,7 +62,6 @@ import com.tencent.supersonic.knowledge.utils.NatureHelper;
 import java.util.Optional;
 import com.tencent.supersonic.headless.api.response.QueryResultWithSchemaResp;
 import com.tencent.supersonic.headless.api.request.QueryStructReq;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
