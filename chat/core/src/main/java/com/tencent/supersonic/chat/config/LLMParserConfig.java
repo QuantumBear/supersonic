@@ -1,6 +1,7 @@
 package com.tencent.supersonic.chat.config;
 
 
+import java.util.List;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -22,4 +23,6 @@ public class LLMParserConfig {
     @Value("${metric.topn:5}")
     private Integer metricTopN;
 
+    @Value("${ignore.words:tenant,租户}")
+    private List<String> ignoreWords;
 }

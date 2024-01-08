@@ -70,7 +70,8 @@ public class UserTokenUtils {
         String displayName = String.valueOf(claims.get(TOKEN_USER_DISPLAY_NAME));
         Integer isAdmin = claims.get(TOKEN_IS_ADMIN) == null
                 ? 0 : Integer.parseInt(claims.get(TOKEN_IS_ADMIN).toString());
-        Long tenantId = Long.parseLong(claims.getOrDefault(TOKEN_TENANT_ID, 0).toString());
+        Long tenantId = Long.parseLong(claims.getOrDefault(TOKEN_TENANT_ID, 0) == null
+            ? "0" : claims.get(TOKEN_TENANT_ID).toString());
         return User.get(userId, userName, displayName, email, isAdmin, tenantId);
     }
 
@@ -87,7 +88,8 @@ public class UserTokenUtils {
         String email = String.valueOf(claims.get(TOKEN_USER_EMAIL));
         String displayName = String.valueOf(claims.get(TOKEN_USER_DISPLAY_NAME));
         String password = String.valueOf(claims.get(TOKEN_USER_PASSWORD));
-        Long tenantId = Long.parseLong(claims.getOrDefault(TOKEN_TENANT_ID, 0).toString());
+        Long tenantId = Long.parseLong(claims.getOrDefault(TOKEN_TENANT_ID, 0) == null
+                ? "0" : claims.get(TOKEN_TENANT_ID).toString());
         Integer isAdmin = claims.get(TOKEN_IS_ADMIN) == null
                 ? 0 : Integer.parseInt(claims.get(TOKEN_IS_ADMIN).toString());
         return UserWithPassword.get(userId, userName, displayName, email, password, isAdmin, tenantId);

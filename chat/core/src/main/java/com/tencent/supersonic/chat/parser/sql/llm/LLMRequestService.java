@@ -1,5 +1,6 @@
 package com.tencent.supersonic.chat.parser.sql.llm;
 
+import com.google.common.collect.Sets;
 import com.tencent.supersonic.chat.agent.AgentToolType;
 import com.tencent.supersonic.chat.agent.NL2SQLTool;
 import com.tencent.supersonic.chat.api.component.SemanticInterpreter;
@@ -219,6 +220,17 @@ public class LLMRequestService {
     private Set<String> getTopNFieldNames(ModelCluster modelCluster, LLMParserConfig llmParserConfig) {
         SemanticSchema semanticSchema = schemaService.getSemanticSchema();
         Set<String> results = semanticSchema.getDimensions(modelCluster.getModelIds()).stream()
+                .filter(dim -> {
+                    if (dim.getName().contains("tenant") && dim.getName().contains("租户")) {
+                        return false;
+                    }
+                    for (String ignoreDim : llmParserConfig.getIgnoreWords()) {
+                        if (dim.getName().contains(ignoreDim)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                })
                 .sorted(Comparator.comparing(SchemaElement::getUseCnt).reversed())
                 .limit(llmParserConfig.getDimensionTopN())
                 .map(entry -> entry.getName())
