@@ -3,14 +3,6 @@ package com.tencent.supersonic.headless.core.utils;
 import com.tencent.supersonic.common.util.ContextUtils;
 import com.tencent.supersonic.headless.core.executor.JdbcExecutor;
 import com.tencent.supersonic.headless.core.executor.QueryExecutor;
-<<<<<<< HEAD
-import com.tencent.supersonic.headless.core.parser.HeadlessConverter;
-import com.tencent.supersonic.headless.core.parser.SqlParser;
-import com.tencent.supersonic.headless.core.parser.calcite.CalciteSqlParser;
-import com.tencent.supersonic.headless.core.optimizer.DetailQuery;
-import com.tencent.supersonic.headless.core.optimizer.QueryOptimizer;
-import com.tencent.supersonic.headless.core.parser.converter.CalculateAggConverter;
-=======
 import com.tencent.supersonic.headless.core.optimizer.DetailQuery;
 import com.tencent.supersonic.headless.core.optimizer.QueryOptimizer;
 import com.tencent.supersonic.headless.core.parser.HeadlessConverter;
@@ -18,7 +10,6 @@ import com.tencent.supersonic.headless.core.parser.SqlParser;
 import com.tencent.supersonic.headless.core.parser.calcite.CalciteSqlParser;
 import com.tencent.supersonic.headless.core.parser.converter.CalculateAggConverter;
 import com.tencent.supersonic.headless.core.parser.converter.DefaultDimValueConverter;
->>>>>>> master
 import com.tencent.supersonic.headless.core.parser.converter.ParserDefaultConverter;
 import java.util.ArrayList;
 import java.util.HashMap;

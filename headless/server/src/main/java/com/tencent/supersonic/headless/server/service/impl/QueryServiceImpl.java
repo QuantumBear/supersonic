@@ -43,7 +43,6 @@ import com.tencent.supersonic.headless.server.service.HeadlessQueryEngine;
 import com.tencent.supersonic.headless.server.service.QueryService;
 import com.tencent.supersonic.headless.server.service.SchemaService;
 import com.tencent.supersonic.headless.server.utils.StatUtils;
-import com.tencent.supersonic.headless.server.annotation.ApiHeaderCheck;
 import com.tencent.supersonic.headless.server.annotation.S2SQLDataPermission;
 import com.tencent.supersonic.headless.server.annotation.StructDataPermission;
 import com.tencent.supersonic.headless.server.aspect.ApiHeaderCheckAspect;
