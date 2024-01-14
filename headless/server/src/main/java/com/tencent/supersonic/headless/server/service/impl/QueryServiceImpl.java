@@ -56,8 +56,8 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,7 +92,7 @@ public class QueryServiceImpl implements QueryService {
             CacheUtils cacheUtils,
             QueryUtils queryUtils,
             QueryReqConverter queryReqConverter,
-            HeadlessQueryEngine headlessQueryEngine,
+            @Lazy HeadlessQueryEngine headlessQueryEngine,
             Catalog catalog,
             AppService appService) {
         this.statUtils = statUtils;
@@ -136,17 +136,17 @@ public class QueryServiceImpl implements QueryService {
     }
 
     @Override
-    public QueryResultWithSchemaResp queryByStruct(QueryStructReq queryStructCmd, User user) throws Exception {
+    public QueryResultWithSchemaResp queryByStruct(QueryStructReq queryStructReq, User user) throws Exception {
         QueryResultWithSchemaResp queryResultWithColumns = null;
-        log.info("[queryStructCmd:{}]", queryStructCmd);
+        log.info("[queryStructReq:{}]", queryStructReq);
         try {
-            statUtils.initStatInfo(queryStructCmd, user);
-            String cacheKey = cacheUtils.generateCacheKey(getKeyByModelIds(queryStructCmd.getModelIds()),
-                    queryStructCmd.generateCommandMd5());
-            handleGlobalCacheDisable(queryStructCmd);
-            boolean isCache = isCache(queryStructCmd);
+            statUtils.initStatInfo(queryStructReq, user);
+            String cacheKey = cacheUtils.generateCacheKey(getKeyByModelIds(queryStructReq.getModelIds()),
+                    queryStructReq.generateCommandMd5());
+            handleGlobalCacheDisable(queryStructReq);
+            boolean isCache = isCache(queryStructReq);
             if (isCache) {
-                queryResultWithColumns = queryByCache(cacheKey, queryStructCmd);
+                queryResultWithColumns = queryByCache(cacheKey, queryStructReq);
                 if (queryResultWithColumns != null) {
                     statUtils.statInfo2DbAsync(TaskStatusEnum.SUCCESS);
                     return queryResultWithColumns;
@@ -154,7 +154,7 @@ public class QueryServiceImpl implements QueryService {
             }
             StatUtils.get().setUseResultCache(false);
             QueryStatement queryStatement = new QueryStatement();
-            queryStatement.setQueryStructReq(queryStructCmd);
+            queryStatement.setQueryStructReq(queryStructReq);
             queryStatement.setIsS2SQL(false);
             queryStatement = headlessQueryEngine.plan(queryStatement);
             QueryExecutor queryExecutor = headlessQueryEngine.route(queryStatement);
@@ -177,8 +177,8 @@ public class QueryServiceImpl implements QueryService {
     @Override
     @StructDataPermission
     @SneakyThrows
-    public QueryResultWithSchemaResp queryByStructWithAuth(QueryStructReq queryStructCmd, User user) {
-        return queryByStruct(queryStructCmd, user);
+    public QueryResultWithSchemaResp queryByStructWithAuth(QueryStructReq queryStructReq, User user) {
+        return queryByStruct(queryStructReq, user);
     }
 
     @Override
@@ -215,9 +215,9 @@ public class QueryServiceImpl implements QueryService {
 
     private QueryStatement getQueryStatementByMultiStruct(QueryMultiStructReq queryMultiStructReq) throws Exception {
         List<QueryStatement> sqlParsers = new ArrayList<>();
-        for (QueryStructReq queryStructCmd : queryMultiStructReq.getQueryStructReqs()) {
+        for (QueryStructReq queryStructReq : queryMultiStructReq.getQueryStructReqs()) {
             QueryStatement queryStatement = new QueryStatement();
-            queryStatement.setQueryStructReq(queryStructCmd);
+            queryStatement.setQueryStructReq(queryStructReq);
             queryStatement.setIsS2SQL(false);
             queryStatement = headlessQueryEngine.plan(queryStatement);
             queryUtils.checkSqlParse(queryStatement);
@@ -234,11 +234,11 @@ public class QueryServiceImpl implements QueryService {
         return (QueryResultWithSchemaResp) queryBySql(queryS2SQLReq, user);
     }
 
-    private void handleGlobalCacheDisable(QueryStructReq queryStructCmd) {
+    private void handleGlobalCacheDisable(QueryStructReq queryStructReq) {
         if (!cacheEnable) {
             Cache cacheInfo = new Cache();
             cacheInfo.setCache(false);
-            queryStructCmd.setCacheInfo(cacheInfo);
+            queryStructReq.setCacheInfo(cacheInfo);
         }
     }
 
@@ -281,9 +281,8 @@ public class QueryServiceImpl implements QueryService {
     }
 
     @Override
-    @ApiHeaderCheck
-    public ItemQueryResultResp metricDataQueryById(QueryItemReq queryItemReq,
-                                                   HttpServletRequest request) throws Exception {
+    public ItemQueryResultResp queryMetricDataById(QueryItemReq queryItemReq,
+            HttpServletRequest request) throws Exception {
         AppDetailResp appDetailResp = getAppDetailResp(request);
         authCheck(appDetailResp, queryItemReq.getIds(), ApiItemType.METRIC);
         List<SingleItemQueryResult> results = Lists.newArrayList();
@@ -300,6 +299,9 @@ public class QueryServiceImpl implements QueryService {
 
     private SingleItemQueryResult dataQuery(Integer appId, Item item, DateConf dateConf, Long limit) throws Exception {
         MetricResp metricResp = catalog.getMetric(item.getId());
+        item.setCreatedBy(metricResp.getCreatedBy());
+        item.setBizName(metricResp.getBizName());
+        item.setName(metricResp.getName());
         List<Item> items = item.getRelateItems();
         List<DimensionResp> dimensionResps = Lists.newArrayList();
         if (!org.springframework.util.CollectionUtils.isEmpty(items)) {
@@ -323,7 +325,7 @@ public class QueryServiceImpl implements QueryService {
     }
 
     private QueryStructReq buildQueryStructReq(List<DimensionResp> dimensionResps,
-                                               MetricResp metricResp, DateConf dateConf, Long limit) {
+            MetricResp metricResp, DateConf dateConf, Long limit) {
         Set<Long> modelIds = dimensionResps.stream().map(DimensionResp::getModelId).collect(Collectors.toSet());
         modelIds.add(metricResp.getModelId());
         QueryStructReq queryStructReq = new QueryStructReq();
@@ -366,27 +368,27 @@ public class QueryServiceImpl implements QueryService {
     }
 
     public QueryStatement parseMetricReq(MetricQueryReq metricReq) throws Exception {
-        QueryStructReq queryStructCmd = new QueryStructReq();
-        return headlessQueryEngine.physicalSql(queryStructCmd, metricReq);
+        QueryStructReq queryStructReq = new QueryStructReq();
+        return headlessQueryEngine.physicalSql(queryStructReq, metricReq);
     }
 
-    private boolean isCache(QueryStructReq queryStructCmd) {
+    private boolean isCache(QueryStructReq queryStructReq) {
         if (!cacheEnable) {
             return false;
         }
-        if (queryStructCmd.getCacheInfo() != null) {
-            return queryStructCmd.getCacheInfo().getCache();
+        if (queryStructReq.getCacheInfo() != null) {
+            return queryStructReq.getCacheInfo().getCache();
         }
         return false;
     }
 
-    private boolean isCache(QueryMultiStructReq queryStructCmd) {
+    private boolean isCache(QueryMultiStructReq queryStructReq) {
         if (!cacheEnable) {
             return false;
         }
-        if (!CollectionUtils.isEmpty(queryStructCmd.getQueryStructReqs())
-                && queryStructCmd.getQueryStructReqs().get(0).getCacheInfo() != null) {
-            return queryStructCmd.getQueryStructReqs().get(0).getCacheInfo().getCache();
+        if (!CollectionUtils.isEmpty(queryStructReq.getQueryStructReqs())
+                && queryStructReq.getQueryStructReqs().get(0).getCacheInfo() != null) {
+            return queryStructReq.getQueryStructReqs().get(0).getCacheInfo().getCache();
         }
         return false;
     }

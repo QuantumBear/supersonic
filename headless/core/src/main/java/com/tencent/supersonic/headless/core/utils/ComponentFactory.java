@@ -3,12 +3,22 @@ package com.tencent.supersonic.headless.core.utils;
 import com.tencent.supersonic.common.util.ContextUtils;
 import com.tencent.supersonic.headless.core.executor.JdbcExecutor;
 import com.tencent.supersonic.headless.core.executor.QueryExecutor;
+<<<<<<< HEAD
 import com.tencent.supersonic.headless.core.parser.HeadlessConverter;
 import com.tencent.supersonic.headless.core.parser.SqlParser;
 import com.tencent.supersonic.headless.core.parser.calcite.CalciteSqlParser;
 import com.tencent.supersonic.headless.core.optimizer.DetailQuery;
 import com.tencent.supersonic.headless.core.optimizer.QueryOptimizer;
 import com.tencent.supersonic.headless.core.parser.converter.CalculateAggConverter;
+=======
+import com.tencent.supersonic.headless.core.optimizer.DetailQuery;
+import com.tencent.supersonic.headless.core.optimizer.QueryOptimizer;
+import com.tencent.supersonic.headless.core.parser.HeadlessConverter;
+import com.tencent.supersonic.headless.core.parser.SqlParser;
+import com.tencent.supersonic.headless.core.parser.calcite.CalciteSqlParser;
+import com.tencent.supersonic.headless.core.parser.converter.CalculateAggConverter;
+import com.tencent.supersonic.headless.core.parser.converter.DefaultDimValueConverter;
+>>>>>>> master
 import com.tencent.supersonic.headless.core.parser.converter.ParserDefaultConverter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * HeadlessConverter QueryOptimizer QueryExecutor object factory
+ */
 public class ComponentFactory {
 
     private static List<HeadlessConverter> headlessConverters = new ArrayList<>();
@@ -78,6 +91,7 @@ public class ComponentFactory {
     }
 
     private static void initSemanticConverter() {
+        headlessConverters.add(getBean("DefaultDimValueConverter", DefaultDimValueConverter.class));
         headlessConverters.add(getBean("CalculateAggConverter", CalculateAggConverter.class));
         headlessConverters.add(getBean("ParserDefaultConverter", ParserDefaultConverter.class));
     }

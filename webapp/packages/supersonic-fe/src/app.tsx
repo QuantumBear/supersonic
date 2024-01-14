@@ -1,7 +1,7 @@
 import RightContent from '@/components/RightContent';
 import S2Icon, { ICON } from '@/components/S2Icon';
 import type { Settings as LayoutSettings } from '@ant-design/pro-layout';
-import { Space, Spin } from 'antd';
+import { Space, Spin, ConfigProvider } from 'antd';
 import ScaleLoader from 'react-spinners/ScaleLoader';
 import type { RunTimeLayoutConfig } from 'umi';
 import { history } from 'umi';
@@ -40,9 +40,9 @@ export const initialStateConfig = {
 };
 
 const getAuthCodes = (params: any) => {
-  const { currentUser, systemConfigAdmins } = params;
+  const { currentUser } = params;
   const codes = [];
-  if (Array.isArray(systemConfigAdmins) && systemConfigAdmins.includes(currentUser?.staffName)) {
+  if (currentUser?.superAdmin) {
     codes.push(ROUTE_AUTH_CODES.SYSTEM_ADMIN);
   }
   return codes;
@@ -65,16 +65,7 @@ export async function getInitialState(): Promise<{
     return undefined;
   };
 
-  const fetchSystemConfigPermission = async () => {
-    try {
-      const { code, data } = await getSystemConfig();
-      if (code === 200) {
-        const { admins } = data;
-        return [...admins];
-      }
-    } catch (error) {}
-    return [];
-  };
+
   let currentUser: any;
   if (!window.location.pathname.includes('login')) {
     currentUser = await fetchUserInfo();
@@ -87,11 +78,8 @@ export async function getInitialState(): Promise<{
     }
   }
 
-  const systemConfigAdmins = await fetchSystemConfigPermission();
-
   const authCodes = getAuthCodes({
     currentUser,
-    systemConfigAdmins,
   });
 
   return {
@@ -155,6 +143,15 @@ export const layout: RunTimeLayoutConfig = (params) => {
     menuHeaderRender: undefined,
     childrenRender: (dom: any) => {
       return (
+        <ConfigProvider
+          theme={{
+            components: {
+              Button: {
+                colorPrimary: '#3182ce',
+              },
+            },
+          }}
+        >
         <div
           style={{ height: location.pathname.includes('chat') ? 'calc(100vh - 56px)' : undefined }}
         >
@@ -163,6 +160,7 @@ export const layout: RunTimeLayoutConfig = (params) => {
             <Copilot token={getToken() || ''} isDeveloper />
           )}
         </div>
+        </ConfigProvider>
       );
     },
     ...initialState?.settings,

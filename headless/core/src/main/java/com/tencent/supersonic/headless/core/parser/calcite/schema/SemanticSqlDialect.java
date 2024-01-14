@@ -2,7 +2,6 @@ package com.tencent.supersonic.headless.core.parser.calcite.schema;
 
 import com.google.common.base.Preconditions;
 import org.apache.calcite.avatica.util.Casing;
-import org.apache.calcite.config.NullCollation;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlIntervalLiteral;
 import org.apache.calcite.sql.SqlNode;
@@ -10,6 +9,9 @@ import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.validate.SqlConformance;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * customize the  SqlDialect
+ */
 public class SemanticSqlDialect extends SqlDialect {
 
     public static final Context DEFAULT_CONTEXT = SqlDialect.EMPTY_CONTEXT
@@ -17,7 +19,6 @@ public class SemanticSqlDialect extends SqlDialect {
             .withLiteralQuoteString("'")
             .withLiteralEscapedQuoteString("''")
             .withIdentifierQuoteString("`")
-            .withNullCollation(NullCollation.LOW)
             .withUnquotedCasing(Casing.UNCHANGED)
             .withQuotedCasing(Casing.UNCHANGED)
             .withCaseSensitive(false);

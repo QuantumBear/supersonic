@@ -49,7 +49,7 @@ public class QueryUtils {
     @Value("${query.cache.enable:true}")
     private Boolean cacheEnable;
 
-    @Value("${query.optimizer.enable:true}")
+    @Value("${query.optimizer.enable:false}")
     private Boolean optimizeEnable;
 
     private final CacheUtils cacheUtils;
@@ -93,7 +93,7 @@ public class QueryUtils {
         });
         List<QueryColumn> columns = queryResultWithColumns.getColumns();
         columns.forEach(column -> {
-            String nameEn = column.getNameEn().toLowerCase();
+            String nameEn = getName(column.getNameEn().toLowerCase());
             if (nameEn.contains(JOIN_UNDERLINE)) {
                 nameEn = nameEn.split(JOIN_UNDERLINE)[1];
             }
@@ -162,6 +162,15 @@ public class QueryUtils {
                 }
             }
         });
+    }
+
+    private String getName(String nameEn) {
+        Pattern pattern = Pattern.compile("\\((.*?)\\)");
+        Matcher matcher = pattern.matcher(nameEn);
+        if (matcher.find()) {
+            return matcher.group(1).replaceAll("`", "");
+        }
+        return nameEn;
     }
 
     private String getNameEnByRegex(String nameEn, String pattern) {
