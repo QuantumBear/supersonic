@@ -57,6 +57,10 @@ public class HeadlessQueryEngineImpl implements HeadlessQueryEngine {
 
     public QueryStatement plan(QueryStatement queryStatement) throws Exception {
         queryStatement.setEnableOptimize(queryUtils.enableOptimize());
+        if (!queryStructUtils.isModelHasTimeDims(queryStatement.getQueryStructReq())) {
+            // 如果模型上就没有时间维度，清除时间维度信息
+            queryStatement.getQueryStructReq().setDateInfo(null);
+        }
         queryStatement.setHeadlessModel(getHeadLessModel(queryStatement));
         queryStatement = queryParser.logicSql(queryStatement);
         queryUtils.checkSqlParse(queryStatement);

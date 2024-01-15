@@ -145,15 +145,16 @@ public class MultiCustomDictionary extends DynamicCustomDictionary {
     public boolean load(String... path) {
         this.path = path;
         long start = System.currentTimeMillis();
-        if (!this.loadMainDictionary(path[0])) {
-            Predefine.logger.warning("自定义词典" + Arrays.toString(path) + "加载失败");
-            return false;
-        } else {
-            Predefine.logger.info(
-                    "自定义词典加载成功:" + this.dat.size() + "个词条，耗时" + (System.currentTimeMillis() - start) + "ms");
-            this.path = path;
-            return true;
+        for (int i = 0; i < path.length; ++i) {
+            if (!this.loadMainDictionary(path[i])) {
+                Predefine.logger.warning("自定义词典" + Arrays.toString(path) + "加载失败");
+                return false;
+            }
         }
+        Predefine.logger.info(
+            "自定义词典加载成功:" + this.path.length + "个词条，耗时" + (System.currentTimeMillis() - start) + "ms");
+        this.path = path;
+        return true;
     }
 
     /***
@@ -254,7 +255,7 @@ public class MultiCustomDictionary extends DynamicCustomDictionary {
     }
 
     public boolean loadMainDictionary(String mainPath) {
-        return loadMainDictionary(mainPath, this.path, this.dat, true, addToSuggesterTrie);
+        return loadMainDictionary(mainPath, this.path, this.dat, false, addToSuggesterTrie);
     }
 
     public static boolean loadDat(String path, DoubleArrayTrie<CoreDictionary.Attribute> dat) {
@@ -343,11 +344,14 @@ public class MultiCustomDictionary extends DynamicCustomDictionary {
 
     public boolean reload() {
         if (this.path != null && this.path.length != 0) {
-            IOUtil.deleteFile(this.path[0] + ".bin");
-            Boolean loadCacheOk = this.loadDat(this.path[0], this.path, this.dat);
-            if (!loadCacheOk) {
-                return this.loadMainDictionary(this.path[0], this.path, this.dat, true, addToSuggesterTrie);
+            for (int i = 0; i < this.path.length; ++i) {
+                IOUtil.deleteFile(this.path[i] + ".bin");
+                Boolean loadCacheOk = this.loadDat(this.path[i], this.path, this.dat);
+                if (!loadCacheOk) {
+                    return this.loadMainDictionary(this.path[i], this.path, this.dat, false, addToSuggesterTrie);
+                }
             }
+
         }
         return false;
 

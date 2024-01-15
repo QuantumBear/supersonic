@@ -18,10 +18,12 @@ import com.tencent.supersonic.common.pojo.Order;
 import com.tencent.supersonic.common.pojo.QueryColumn;
 import com.tencent.supersonic.common.pojo.enums.AggOperatorEnum;
 import com.tencent.supersonic.common.pojo.enums.FilterOperatorEnum;
+import com.tencent.supersonic.common.util.DateUtils;
 import com.tencent.supersonic.headless.api.response.QueryResultWithSchemaResp;
 import com.tencent.supersonic.headless.api.request.QueryStructReq;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +54,7 @@ public class DictQueryHelper {
             User user) {
         List<String> data = new ArrayList<>();
         QueryStructReq queryStructCmd = generateQueryStructCmd(modelId, defaultMetricDesc, dim4Dict);
+        setQueryTenantId(user, queryStructCmd);
         try {
             QueryResultWithSchemaResp queryResultWithColumns = semanticInterpreter.queryByStruct(queryStructCmd, user);
 
@@ -74,6 +77,19 @@ public class DictQueryHelper {
             log.warn("fetchDimValueSingle,e:", e);
         }
         return data;
+    }
+
+    private void setQueryTenantId(User user, QueryStructReq queryStructCmd) {
+        if (user.getTenantId() != null && user.getTenantId() > 0) {
+            queryStructCmd.setTenantId(user.getTenantId());
+            // add tenantId filter to queryStructCmd
+            Filter tenantIdFilter = new Filter("tenant_id", FilterOperatorEnum.EQUALS, user.getTenantId());
+            if (CollectionUtils.isEmpty(queryStructCmd.getDimensionFilters())) {
+                queryStructCmd.setDimensionFilters(Collections.singletonList(tenantIdFilter));
+            } else {
+                queryStructCmd.getDimensionFilters().add(tenantIdFilter);
+            }
+        }
     }
 
     private String rewriteDimName(List<QueryColumn> columns, String bizName) {

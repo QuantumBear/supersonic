@@ -120,7 +120,8 @@ public class ChatKnowledgeTaskServiceImpl implements KnowledgeTaskService {
                 for (Dim4Dict dim4Dict : dimValueDO.getDimensions()) {
                     List<String> data = dictQueryHelper.fetchDimValueSingle(modelId, defaultMetricDesc, dim4Dict, user);
                     //3. local file changes
-                    String fileName = String.format(dimValue + Constants.DOT + dictFileType, modelId,
+                    String directory = user.getTenantId() + "/";
+                    String fileName = directory + String.format(dimValue + Constants.DOT + dictFileType, modelId,
                             dim4Dict.getDimId());
                     fileHandler.writeFile(data, fileName, false);
                 }

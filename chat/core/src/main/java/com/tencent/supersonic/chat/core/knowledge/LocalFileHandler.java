@@ -86,6 +86,11 @@ public class LocalFileHandler implements FileHandler {
             createDir(dictDirectoryLatest);
         }
         String filePath = dictDirectoryLatest + "/" + fileName;
+        // get filePath's directory
+        String tenantDirectory = filePath.substring(0, filePath.lastIndexOf("/"));
+        if (!existPath(tenantDirectory)) {
+            createDir(tenantDirectory);
+        }
         if (existPath(filePath)) {
             backupFile(fileName);
         }

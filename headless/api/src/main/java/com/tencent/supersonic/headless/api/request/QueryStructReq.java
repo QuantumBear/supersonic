@@ -63,6 +63,7 @@ public class QueryStructReq {
     private Long limit = 2000L;
     private QueryType queryType = QueryType.ID;
     private Cache cacheInfo;
+    private Long tenantId;
 
     /**
      * Later deleted for compatibility only
@@ -142,6 +143,8 @@ public class QueryStructReq {
                 .append(params);
         stringBuilder.append(",\"limit\":")
                 .append(limit);
+        stringBuilder.append(",\"tenantId\":")
+                .append(tenantId);
         stringBuilder.append('}');
         return stringBuilder.toString();
     }
@@ -177,6 +180,8 @@ public class QueryStructReq {
                 .append(limit);
         sb.append(",\"cacheInfo\":")
                 .append(cacheInfo);
+        sb.append(",\"tenantId\":")
+                .append(tenantId);
         sb.append('}');
         return sb.toString();
     }

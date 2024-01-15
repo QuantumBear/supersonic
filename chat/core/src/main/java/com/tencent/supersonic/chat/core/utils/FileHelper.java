@@ -7,8 +7,11 @@ import com.hankcs.hanlp.dictionary.DynamicCustomDictionary;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -22,6 +25,9 @@ public class FileHelper {
         File customFolder = new File(customPath);
 
         File[] customSubFiles = getFileList(customFolder, ".bin");
+        if (customSubFiles == null || customSubFiles.length == 0) {
+            return;
+        }
 
         for (File file : customSubFiles) {
             try {
@@ -34,20 +40,27 @@ public class FileHelper {
     }
 
     private static File[] getFileList(File customFolder, String suffix) {
-        File[] customSubFiles = customFolder.listFiles(file -> {
-            if (file.isDirectory()) {
-                return false;
+        List<File> fileList = new ArrayList<>();
+        getFileListRecursive(customFolder, suffix, fileList);
+        return fileList.toArray(new File[0]);
+    }
+
+    private static void getFileListRecursive(File folder, String suffix, List<File> fileList) {
+        File[] files = folder.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    getFileListRecursive(file, suffix, fileList);
+                } else if (file.getName().toLowerCase().endsWith(suffix)) {
+                    fileList.add(file);
+                }
             }
-            if (file.getName().toLowerCase().endsWith(suffix)) {
-                return true;
-            }
-            return false;
-        });
-        return customSubFiles;
+        }
     }
 
     private static String getCustomPath(String[] path) {
-        return path[0].substring(0, path[0].lastIndexOf(FILE_SPILT)) + FILE_SPILT;
+        String lastParentDir = path[0].substring(0, path[0].lastIndexOf(FILE_SPILT)) + FILE_SPILT;
+        return lastParentDir.substring(0, lastParentDir.lastIndexOf(FILE_SPILT)) + FILE_SPILT;
     }
 
     /**

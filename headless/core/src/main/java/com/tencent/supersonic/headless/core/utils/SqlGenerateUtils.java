@@ -150,6 +150,10 @@ public class SqlGenerateUtils {
         if (Objects.isNull(dateDate)
                 || Strings.isEmpty(dateDate.getStartDate())
                 && Strings.isEmpty(dateDate.getEndDate())) {
+            if (Objects.isNull(dateInfo)) {
+                // 无时间信息，返回空字符串
+                return "";
+            }
             if (dateInfo.getDateMode().equals(DateConf.DateMode.LIST)) {
                 return dateModeUtils.listDateStr(dateDate, dateInfo);
             }

@@ -114,6 +114,25 @@ public class HanlpHelper {
                 .toArray(String[]::new);
         log.info("hanlpPropertiesPath:{},CustomDictionaryPath:{}", hanlpPropertiesPath, CustomDictionaryPath);
 
+        File folder = new File(CustomDictionaryPath[0]);
+        File[] listOfSubFolders = folder.listFiles(File::isDirectory);
+
+        List<String> files = new ArrayList<>();
+        files.add(CustomDictionaryPath[0]);
+        for (File subFolder : listOfSubFolders) {
+            File[] listOfFiles = subFolder.listFiles(File::isFile);
+            if (listOfFiles == null) {
+                continue;
+            }
+            for (File file : listOfFiles) {
+                files.add(file.getAbsolutePath());
+            }
+        }
+
+        CustomDictionaryPath = files.toArray(new String[0]);
+
+        log.info("Updated CustomDictionaryPath: {}", Arrays.toString(CustomDictionaryPath));
+
         HanLP.Config.CoreDictionaryPath = hanlpPropertiesPath + FILE_SPILT + HanLP.Config.BiGramDictionaryPath;
         HanLP.Config.CoreDictionaryTransformMatrixDictionaryPath = hanlpPropertiesPath + FILE_SPILT
                 + HanLP.Config.CoreDictionaryTransformMatrixDictionaryPath;

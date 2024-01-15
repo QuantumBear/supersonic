@@ -7,6 +7,7 @@ import com.tencent.supersonic.common.pojo.DateConf;
 import com.tencent.supersonic.common.pojo.DateConf.DateMode;
 import com.tencent.supersonic.common.pojo.ItemDateResp;
 import com.tencent.supersonic.common.pojo.enums.TypeEnums;
+import com.tencent.supersonic.common.util.ContextUtils;
 import com.tencent.supersonic.common.util.DateModeUtils;
 import com.tencent.supersonic.common.util.SqlFilterUtils;
 import com.tencent.supersonic.common.util.jsqlparser.FieldExpression;
@@ -20,9 +21,12 @@ import com.tencent.supersonic.headless.api.response.DimSchemaResp;
 import com.tencent.supersonic.headless.api.response.DimensionResp;
 import com.tencent.supersonic.headless.api.response.MetricResp;
 import com.tencent.supersonic.headless.api.response.MetricSchemaResp;
+import com.tencent.supersonic.headless.api.response.ModelResp;
 import com.tencent.supersonic.headless.api.response.ModelSchemaResp;
 import com.tencent.supersonic.headless.server.pojo.MetaFilter;
+import com.tencent.supersonic.headless.server.pojo.ModelFilter;
 import com.tencent.supersonic.headless.server.service.Catalog;
+import com.tencent.supersonic.headless.server.service.ModelService;
 import com.tencent.supersonic.headless.server.service.SchemaService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -119,6 +123,18 @@ public class QueryStructUtils {
             }
         }
         return metricIds;
+    }
+
+    public boolean isModelHasTimeDims(QueryStructReq queryStructCmd) {
+        ModelService modelService = ContextUtils.getBean(ModelService.class);
+        ModelFilter modelFilter = new ModelFilter();
+        modelFilter.setIds(queryStructCmd.getModelIds());
+        List<ModelResp> modelSchemaResps = modelService.getModelList(modelFilter);
+        if (CollectionUtils.isEmpty(modelSchemaResps)) {
+            return false;
+        }
+        return  modelSchemaResps.stream()
+                .anyMatch(modelSchemaResp -> modelSchemaResp.getModelDetail().getTimeDims().size() > 0);
     }
 
     public Set<String> getResNameEn(QueryStructReq queryStructCmd) {
