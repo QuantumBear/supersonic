@@ -133,7 +133,7 @@ public class QueryStructUtils {
         if (CollectionUtils.isEmpty(modelSchemaResps)) {
             return false;
         }
-        return  modelSchemaResps.stream()
+        return modelSchemaResps.stream()
                 .anyMatch(modelSchemaResp -> modelSchemaResp.getModelDetail().getTimeDims().size() > 0);
     }
 

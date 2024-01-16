@@ -31,6 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,6 +51,17 @@ public class MultiCustomDictionary extends DynamicCustomDictionary {
         super(path);
     }
 
+    private static Optional<Long> getTenantIdFromPath(String path) {
+        // get base directory from path
+        String currentDirectory = path.substring(0, path.lastIndexOf("/"));
+        // get direct parent directory name
+        String tenantId = currentDirectory.substring(currentDirectory.lastIndexOf("/") + 1);
+        try {
+            return Optional.of(Long.parseLong(tenantId));
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
+    }
     /***
      * load dictionary
      * @param path
@@ -66,6 +78,8 @@ public class MultiCustomDictionary extends DynamicCustomDictionary {
             if (path.endsWith(".csv")) {
                 splitter = ",";
             }
+
+            Optional<Long> tenantId = getTenantIdFromPath(path);
 
             BufferedReader br = new BufferedReader(new InputStreamReader(IOUtil.newInputStream(path), "UTF-8"));
             boolean firstLine = true;
@@ -119,7 +133,11 @@ public class MultiCustomDictionary extends DynamicCustomDictionary {
                 }
                 map.put(word, attribute);
                 if (addToSuggeterTrie) {
-                    SearchService.put(word, attribute);
+                    if (tenantId.isPresent()) {
+                        SearchService.put(tenantId.get(), word, attribute);
+                    } else {
+                        SearchService.put(word, attribute);
+                    }
                 }
                 for (int i = 0; i < attribute.nature.length; i++) {
                     Nature nature = attribute.nature[i];
@@ -152,7 +170,7 @@ public class MultiCustomDictionary extends DynamicCustomDictionary {
             }
         }
         Predefine.logger.info(
-            "自定义词典加载成功:" + this.path.length + "个词条，耗时" + (System.currentTimeMillis() - start) + "ms");
+                "自定义词典加载成功:" + this.path.length + "个词条，耗时" + (System.currentTimeMillis() - start) + "ms");
         this.path = path;
         return true;
     }
@@ -179,6 +197,9 @@ public class MultiCustomDictionary extends DynamicCustomDictionary {
                 for (String p : path) {
                     Nature defaultNature = Nature.n;
                     File file = new File(p);
+                    if (file.isDirectory()) {
+                        continue;
+                    }
                     String fileName = file.getName();
                     int cut = fileName.lastIndexOf(32);
                     if (cut > 0) {

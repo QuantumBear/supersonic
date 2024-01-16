@@ -10,6 +10,7 @@ import com.tencent.supersonic.chat.core.knowledge.dictionary.DictionaryAttribute
 import com.tencent.supersonic.common.pojo.enums.DictWordType;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,11 +28,13 @@ public class SearchService {
 
     public static final int SEARCH_SIZE = 200;
     private static BinTrie<List<String>> trie;
+    private static Map<Long, BinTrie<List<String>>> tenantTrieMap;
     private static BinTrie<List<String>> suffixTrie;
 
     static {
         trie = new BinTrie<>();
         suffixTrie = new BinTrie<>();
+        tenantTrieMap = new HashMap<>();
     }
 
     /***
@@ -39,8 +42,17 @@ public class SearchService {
      * @param key
      * @return
      */
-    public static List<HanlpMapResult> prefixSearch(String key, int limit, Integer agentId, Set<Long> detectModelIds) {
-        return prefixSearch(key, limit, agentId, trie, detectModelIds);
+    public static List<HanlpMapResult> prefixSearch(Long tenantId, String key, int limit,
+            Integer agentId, Set<Long> detectModelIds) {
+        List<HanlpMapResult> searchResult = prefixSearch(key, limit, agentId, trie, detectModelIds);
+        if (CollectionUtils.isEmpty(searchResult) && tenantId > 0) {
+            BinTrie<List<String>> tenantTrie = tenantTrieMap.get(tenantId);
+            if (Objects.isNull(tenantTrie)) {
+                tenantTrieMap.put(tenantId, new BinTrie<>());
+            }
+            searchResult = prefixSearch(key, limit, agentId, tenantTrieMap.get(tenantId), detectModelIds);
+        }
+        return searchResult;
     }
 
     public static List<HanlpMapResult> prefixSearch(String key, int limit, Integer agentId,
@@ -61,7 +73,8 @@ public class SearchService {
      * @param key
      * @return
      */
-    public static List<HanlpMapResult> suffixSearch(String key, int limit, Integer agentId, Set<Long> detectModelIds) {
+    public static List<HanlpMapResult> suffixSearch(Long tenantId, String key,
+            int limit, Integer agentId, Set<Long> detectModelIds) {
         String reverseDetectSegment = StringUtils.reverse(key);
         return suffixSearch(reverseDetectSegment, limit, agentId, suffixTrie, detectModelIds);
     }
@@ -112,10 +125,21 @@ public class SearchService {
         log.info("clear all trie");
         trie = new BinTrie<>();
         suffixTrie = new BinTrie<>();
+        tenantTrieMap = new HashMap<>();
     }
 
     public static void put(String key, CoreDictionary.Attribute attribute) {
         trie.put(key, getValue(attribute.nature));
+    }
+
+    public static void put(Long tenantId, String key, CoreDictionary.Attribute attribute) {
+        if (tenantId > 0) {
+            BinTrie<List<String>> tenantTrie = tenantTrieMap.get(tenantId);
+            if (Objects.isNull(tenantTrie)) {
+                tenantTrieMap.put(tenantId, new BinTrie<>());
+            }
+            tenantTrieMap.get(tenantId).put(key, getValue(attribute.nature));
+        }
     }
 
     public static void loadSuffix(List<DictWord> suffixes) {

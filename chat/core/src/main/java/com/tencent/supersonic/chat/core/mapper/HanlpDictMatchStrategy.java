@@ -1,6 +1,7 @@
 package com.tencent.supersonic.chat.core.mapper;
 
 import com.hankcs.hanlp.seg.common.Term;
+import com.tencent.supersonic.auth.api.authentication.pojo.User;
 import com.tencent.supersonic.chat.core.pojo.QueryContext;
 import com.tencent.supersonic.chat.api.pojo.request.QueryReq;
 import com.tencent.supersonic.chat.core.config.OptimizationConfig;
@@ -65,13 +66,17 @@ public class HanlpDictMatchStrategy extends BaseMatchStrategy<HanlpMapResult> {
         String text = queryReq.getQueryText();
         Integer agentId = queryReq.getAgentId();
         String detectSegment = text.substring(startIndex, index);
+        User user = queryReq.getUser();
+        Long tenantId = user != null ? user.getTenantId() : 0L;
 
         // step1. pre search
         Integer oneDetectionMaxSize = optimizationConfig.getOneDetectionMaxSize();
-        LinkedHashSet<HanlpMapResult> hanlpMapResults = SearchService.prefixSearch(detectSegment, oneDetectionMaxSize,
+        LinkedHashSet<HanlpMapResult> hanlpMapResults = SearchService.prefixSearch(tenantId,
+                detectSegment,
+                oneDetectionMaxSize,
                 agentId, detectModelIds).stream().collect(Collectors.toCollection(LinkedHashSet::new));
         // step2. suffix search
-        LinkedHashSet<HanlpMapResult> suffixHanlpMapResults = SearchService.suffixSearch(detectSegment,
+        LinkedHashSet<HanlpMapResult> suffixHanlpMapResults = SearchService.suffixSearch(tenantId, detectSegment,
                         oneDetectionMaxSize, agentId, detectModelIds).stream()
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 

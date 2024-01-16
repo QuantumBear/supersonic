@@ -643,7 +643,8 @@ public class QueryServiceImpl implements QueryService {
         Set<Long> detectModelIds = new HashSet<>();
         detectModelIds.add(schemaElement.getModel());
         dimensionValueReq.setModelId(schemaElement.getModel());
-        List<String> dimensionValues = getDimensionValues(dimensionValueReq, detectModelIds);
+        Long tenantId = user.getTenantId();
+        List<String> dimensionValues = getDimensionValues(tenantId, dimensionValueReq, detectModelIds);
         // if the search results is null,search dimensionValue from database
         if (CollectionUtils.isEmpty(dimensionValues)) {
             queryResultWithSchemaResp = queryDatabase(dimensionValueReq, user);
@@ -667,13 +668,14 @@ public class QueryServiceImpl implements QueryService {
         return queryResultWithSchemaResp;
     }
 
-    private List<String> getDimensionValues(DimensionValueReq dimensionValueReq, Set<Long> detectModelIds) {
+    private List<String> getDimensionValues(Long tenantId,
+            DimensionValueReq dimensionValueReq, Set<Long> detectModelIds) {
         //if value is null ,then search from NATURE_TO_VALUES
         if (StringUtils.isBlank(dimensionValueReq.getValue())) {
             return SearchService.getDimensionValue(dimensionValueReq);
         }
         //search from prefixSearch
-        List<HanlpMapResult> hanlpMapResultList = SearchService.prefixSearch(dimensionValueReq.getValue(),
+        List<HanlpMapResult> hanlpMapResultList = SearchService.prefixSearch(tenantId, dimensionValueReq.getValue(),
                 2000, dimensionValueReq.getAgentId(), detectModelIds);
         HanlpHelper.transLetterOriginal(hanlpMapResultList);
         return hanlpMapResultList.stream()

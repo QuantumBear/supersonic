@@ -2,6 +2,7 @@ package com.tencent.supersonic.chat.core.mapper;
 
 import com.google.common.collect.Lists;
 import com.hankcs.hanlp.seg.common.Term;
+import com.tencent.supersonic.auth.api.authentication.pojo.User;
 import com.tencent.supersonic.chat.api.pojo.request.QueryReq;
 import com.tencent.supersonic.chat.core.knowledge.HanlpMapResult;
 import com.tencent.supersonic.chat.core.knowledge.SearchService;
@@ -32,6 +33,8 @@ public class SearchMatchStrategy extends BaseMatchStrategy<HanlpMapResult> {
         QueryReq queryReq = queryContext.getRequest();
         String text = queryReq.getQueryText();
         Map<Integer, Integer> regOffsetToLength = getRegOffsetToLength(originals);
+        User user = queryReq.getUser();
+        Long tenantId = user.getTenantId() == null ? 0L : user.getTenantId();
 
         List<Integer> detectIndexList = Lists.newArrayList();
 
@@ -53,9 +56,9 @@ public class SearchMatchStrategy extends BaseMatchStrategy<HanlpMapResult> {
                     String detectSegment = text.substring(detectIndex);
 
                     if (StringUtils.isNotEmpty(detectSegment)) {
-                        List<HanlpMapResult> hanlpMapResults = SearchService.prefixSearch(detectSegment,
+                        List<HanlpMapResult> hanlpMapResults = SearchService.prefixSearch(tenantId, detectSegment,
                                 SearchService.SEARCH_SIZE, queryReq.getAgentId(), detectModelIds);
-                        List<HanlpMapResult> suffixHanlpMapResults = SearchService.suffixSearch(
+                        List<HanlpMapResult> suffixHanlpMapResults = SearchService.suffixSearch(tenantId,
                                 detectSegment, SEARCH_SIZE, queryReq.getAgentId(), detectModelIds);
                         hanlpMapResults.addAll(suffixHanlpMapResults);
                         // remove entity name where search
