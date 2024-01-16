@@ -62,6 +62,7 @@ public class MultiCustomDictionary extends DynamicCustomDictionary {
             return Optional.empty();
         }
     }
+
     /***
      * load dictionary
      * @param path
