@@ -190,6 +190,14 @@ public class SqlParserReplaceHelper {
         }
         List<PlainSelect> plainSelects = SqlParserSelectHelper.getPlainSelects(plainSelectList);
         for (PlainSelect plainSelect : plainSelects) {
+            if (plainSelect.getFromItem() instanceof SubSelect) {
+                SubSelect subSelect = (SubSelect) plainSelect.getFromItem();
+                SelectBody subSelectBody = subSelect.getSelectBody();
+                if (subSelectBody instanceof PlainSelect) {
+                    PlainSelect subPlainSelect = (PlainSelect) subSelectBody;
+                    replaceFieldsInPlainOneSelect(fieldNameMap, exactReplace, subPlainSelect);
+                }
+            }
             replaceFieldsInPlainOneSelect(fieldNameMap, exactReplace, plainSelect);
         }
         return selectStatement.toString();

@@ -24,6 +24,7 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.GroupByElement;
 import net.sf.jsqlparser.statement.select.OrderByElement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
@@ -458,7 +459,13 @@ public class SqlParserSelectHelper {
         SelectBody selectBody = selectStatement.getSelectBody();
         if (selectBody instanceof PlainSelect) {
             PlainSelect plainSelect = (PlainSelect) selectBody;
-            return (Table) plainSelect.getFromItem();
+            FromItem fromItem = plainSelect.getFromItem();
+            if (fromItem instanceof Table) {
+                return (Table) fromItem;
+            } else if (fromItem instanceof SubSelect) {
+                SubSelect subSelect = (SubSelect) fromItem;
+                return getTable(subSelect.getSelectBody().toString());
+            }
         } else if (selectBody instanceof SetOperationList) {
             SetOperationList setOperationList = (SetOperationList) selectBody;
             if (!CollectionUtils.isEmpty(setOperationList.getSelects())) {
