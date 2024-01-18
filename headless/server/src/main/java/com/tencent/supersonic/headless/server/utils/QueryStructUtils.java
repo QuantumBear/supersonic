@@ -134,7 +134,7 @@ public class QueryStructUtils {
             return false;
         }
         return modelSchemaResps.stream()
-                .anyMatch(modelSchemaResp -> modelSchemaResp.getModelDetail().getTimeDims().size() > 0);
+                .anyMatch(modelSchemaResp -> modelSchemaResp.getModelDetail().filterTimeDims().size() > 0);
     }
 
     public Set<String> getResNameEn(QueryStructReq queryStructCmd) {

@@ -166,3 +166,7 @@ CREATE TABLE `s2_app`
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 alter table s2_user add column `tenant_id` bigint DEFAULT NULL;
+
+--20240115
+alter table s2_metric add column `define_type` varchar(50)  DEFAULT NULL; -- MEASURE, FIELD, METRIC
+update s2_metric set define_type = 'MEASURE';

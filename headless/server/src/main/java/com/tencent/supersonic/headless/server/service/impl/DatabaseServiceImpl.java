@@ -7,22 +7,25 @@ import com.tencent.supersonic.headless.api.response.ModelResp;
 import com.tencent.supersonic.headless.api.response.QueryResultWithSchemaResp;
 import com.tencent.supersonic.headless.core.adaptor.db.DbAdaptor;
 import com.tencent.supersonic.headless.core.adaptor.db.DbAdaptorFactory;
+import com.tencent.supersonic.headless.core.pojo.Database;
+import com.tencent.supersonic.headless.core.utils.JdbcDataSourceUtils;
+import com.tencent.supersonic.headless.core.utils.SqlUtils;
 import com.tencent.supersonic.headless.server.persistence.dataobject.DatabaseDO;
 import com.tencent.supersonic.headless.server.persistence.repository.DatabaseRepository;
-import com.tencent.supersonic.headless.core.pojo.Database;
+import com.tencent.supersonic.headless.server.pojo.DatabaseParameter;
+import com.tencent.supersonic.headless.server.pojo.DbParameterFactory;
 import com.tencent.supersonic.headless.server.pojo.ModelFilter;
 import com.tencent.supersonic.headless.server.service.DatabaseService;
 import com.tencent.supersonic.headless.server.service.ModelService;
 import com.tencent.supersonic.headless.server.utils.DatabaseConverter;
-import com.tencent.supersonic.headless.core.utils.JdbcDataSourceUtils;
-import com.tencent.supersonic.headless.core.utils.SqlUtils;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -34,8 +37,8 @@ public class DatabaseServiceImpl implements DatabaseService {
     private ModelService datasourceService;
 
     public DatabaseServiceImpl(DatabaseRepository databaseRepository,
-                               SqlUtils sqlUtils,
-                               @Lazy ModelService datasourceService) {
+            SqlUtils sqlUtils,
+            @Lazy ModelService datasourceService) {
         this.databaseRepository = databaseRepository;
         this.sqlUtils = sqlUtils;
         this.datasourceService = datasourceService;
@@ -67,8 +70,8 @@ public class DatabaseServiceImpl implements DatabaseService {
     public List<DatabaseResp> getDatabaseList(User user) {
         List<DatabaseResp> databaseResps =
                 databaseRepository.getDatabaseList()
-                .stream().map(DatabaseConverter::convert)
-                .collect(Collectors.toList());
+                        .stream().map(DatabaseConverter::convert)
+                        .collect(Collectors.toList());
         fillPermission(databaseResps, user);
         return databaseResps;
     }
@@ -130,12 +133,19 @@ public class DatabaseServiceImpl implements DatabaseService {
 
     @Override
     public QueryResultWithSchemaResp executeSql(String sql, DatabaseResp databaseResp) {
-        return queryWithColumns(sql, databaseResp);
+        return queryWithColumns(sql, DatabaseConverter.convert(databaseResp));
     }
 
-    private QueryResultWithSchemaResp queryWithColumns(String sql, DatabaseResp databaseResp) {
+    @Override
+    public Map<String, List<DatabaseParameter>> getDatabaseParameters() {
+        return DbParameterFactory.getMap().entrySet().stream().collect(LinkedHashMap::new,
+                (map, entry) -> map.put(entry.getKey(), entry.getValue().build()),
+                LinkedHashMap::putAll);
+    }
+
+    private QueryResultWithSchemaResp queryWithColumns(String sql, Database database) {
         QueryResultWithSchemaResp queryResultWithColumns = new QueryResultWithSchemaResp();
-        SqlUtils sqlUtils = this.sqlUtils.init(databaseResp);
+        SqlUtils sqlUtils = this.sqlUtils.init(database);
         log.info("query SQL: {}", sql);
         sqlUtils.queryInternal(sql, queryResultWithColumns);
         return queryResultWithColumns;
@@ -150,7 +160,7 @@ public class DatabaseServiceImpl implements DatabaseService {
         DatabaseResp databaseResp = getDatabase(id);
         DbAdaptor engineAdaptor = DbAdaptorFactory.getEngineAdaptor(databaseResp.getType());
         String metaQueryTpl = engineAdaptor.getDbMetaQueryTpl();
-        return queryWithColumns(metaQueryTpl, databaseResp);
+        return queryWithColumns(metaQueryTpl, DatabaseConverter.convert(databaseResp));
     }
 
     @Override
@@ -159,7 +169,7 @@ public class DatabaseServiceImpl implements DatabaseService {
         DbAdaptor engineAdaptor = DbAdaptorFactory.getEngineAdaptor(databaseResp.getType());
         String metaQueryTpl = engineAdaptor.getTableMetaQueryTpl();
         String metaQuerySql = String.format(metaQueryTpl, db);
-        return queryWithColumns(metaQuerySql, databaseResp);
+        return queryWithColumns(metaQuerySql, DatabaseConverter.convert(databaseResp));
     }
 
     @Override
@@ -168,7 +178,7 @@ public class DatabaseServiceImpl implements DatabaseService {
         DbAdaptor engineAdaptor = DbAdaptorFactory.getEngineAdaptor(databaseResp.getType());
         String metaQueryTpl = engineAdaptor.getColumnMetaQueryTpl();
         String metaQuerySql = String.format(metaQueryTpl, db, table);
-        return queryWithColumns(metaQuerySql, databaseResp);
+        return queryWithColumns(metaQuerySql, DatabaseConverter.convert(databaseResp));
     }
 
 }

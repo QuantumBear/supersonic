@@ -26,6 +26,8 @@ public class ModelDetail {
 
     private List<Measure> measures;
 
+    private List<Field> fields;
+
     public String getSqlQuery() {
         if (StringUtils.isNotBlank(sqlQuery) && sqlQuery.endsWith(";")) {
             sqlQuery = sqlQuery.substring(0, sqlQuery.length() - 1);
@@ -34,7 +36,7 @@ public class ModelDetail {
     }
 
     @JSONField(serialize = false)
-    public List<Dim> getTimeDims() {
+    public List<Dim> filterTimeDims() {
         if (CollectionUtils.isEmpty(dimensions)) {
             return Lists.newArrayList();
         }
