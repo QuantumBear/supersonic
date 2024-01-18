@@ -17,10 +17,10 @@ public class LLMParserConfig {
     @Value("${query2sql.path:/query2sql}")
     private String queryToSqlPath;
 
-    @Value("${dimension.topn:5}")
+    @Value("${dimension.topn:20}")
     private Integer dimensionTopN;
 
-    @Value("${metric.topn:5}")
+    @Value("${metric.topn:10}")
     private Integer metricTopN;
 
     @Value("${ignore.words:tenant,租户}")
