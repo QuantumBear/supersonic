@@ -87,12 +87,9 @@ public class MetricCheckProcessor implements ParseResultProcessor {
             if (!checkInModelSchema(dimensionName, SchemaElementType.DIMENSION, semanticSchema)) {
                 whereFieldsToRemove.add(dimensionName);
             }
-            /*
-            ** TODO: comment out the checkDrillDownDimension temporarily
-            *   because it will remove tenant_id in where clause
             if (!checkDrillDownDimension(dimensionName, metricFields, semanticSchema)) {
                 whereFieldsToRemove.add(dimensionName);
-            }*/
+            }
         }
         for (String dimensionName : groupByFields) {
             if (TimeDimensionEnum.containsTimeDimension(dimensionName)) {
