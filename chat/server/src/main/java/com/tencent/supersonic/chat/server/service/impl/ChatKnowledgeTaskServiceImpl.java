@@ -1,6 +1,7 @@
 package com.tencent.supersonic.chat.server.service.impl;
 
 import com.tencent.supersonic.auth.api.authentication.pojo.User;
+import com.tencent.supersonic.auth.api.authentication.service.UserService;
 import com.tencent.supersonic.chat.api.pojo.request.DictLatestTaskReq;
 import com.tencent.supersonic.chat.api.pojo.request.DictTaskFilterReq;
 import com.tencent.supersonic.chat.api.pojo.response.DictLatestTaskResp;
@@ -45,6 +46,7 @@ public class ChatKnowledgeTaskServiceImpl implements KnowledgeTaskService {
     private final FileHandler fileHandler;
     private final DictRepository dictRepository;
     private final ApplicationStartedListener applicationStartedListener;
+    private final UserService  userService;
 
     @Value("${dict.flush.enable:true}")
     private Boolean dictFlushEnable;
@@ -58,12 +60,14 @@ public class ChatKnowledgeTaskServiceImpl implements KnowledgeTaskService {
                                     DictQueryHelper dictQueryHelper,
                                     FileHandler fileHandler,
                                     DictRepository dictRepository,
-                                    ApplicationStartedListener applicationStartedListener) {
+                                    ApplicationStartedListener applicationStartedListener,
+                                    UserService userService) {
         this.metaUtils = metaUtils;
         this.dictQueryHelper = dictQueryHelper;
         this.fileHandler = fileHandler;
         this.dictRepository = dictRepository;
         this.applicationStartedListener = applicationStartedListener;
+        this.userService = userService;
     }
 
     @Scheduled(cron = "${knowledge.dimension.value.cron:0 0 0 * * ?}")
@@ -75,8 +79,11 @@ public class ChatKnowledgeTaskServiceImpl implements KnowledgeTaskService {
         DimValue2DictCommand dimValue2DictCommend = new DimValue2DictCommand();
         dimValue2DictCommend.setUpdateMode(DictUpdateMode.OFFLINE_FULL);
 
-        User user = User.getFakeUser();
-        addDictTask(dimValue2DictCommend, user);
+        List<User> users = userService.getUserList();
+
+        users.stream().filter(user -> user.getTenantId() > 0).forEach(user -> {
+            addDictTask(dimValue2DictCommend, user);
+        });
         log.info("[dailyDictTask] finish");
         return true;
     }
