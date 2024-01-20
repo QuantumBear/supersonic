@@ -6,14 +6,12 @@ import com.tencent.supersonic.common.pojo.Constants;
 import com.tencent.supersonic.common.pojo.DateConf;
 import com.tencent.supersonic.common.pojo.Filter;
 import com.tencent.supersonic.common.pojo.Order;
-import com.tencent.supersonic.common.pojo.enums.QueryType;
 import com.tencent.supersonic.common.pojo.enums.AggOperatorEnum;
+import com.tencent.supersonic.common.pojo.enums.QueryType;
 import com.tencent.supersonic.common.util.ContextUtils;
 import com.tencent.supersonic.common.util.DateModeUtils;
 import com.tencent.supersonic.common.util.SqlFilterUtils;
 import com.tencent.supersonic.common.util.jsqlparser.SqlParserAddHelper;
-import com.tencent.supersonic.headless.api.pojo.Cache;
-import com.tencent.supersonic.headless.api.pojo.Param;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.JSQLParserException;
@@ -38,19 +36,14 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 
 @Data
 @Slf4j
-public class QueryStructReq {
-
-    private Set<Long> modelIds;
+public class QueryStructReq extends SemanticQueryReq {
 
     private String modelName;
     private List<String> groups = new ArrayList<>();
@@ -58,11 +51,9 @@ public class QueryStructReq {
     private List<Order> orders = new ArrayList<>();
     private List<Filter> dimensionFilters = new ArrayList<>();
     private List<Filter> metricFilters = new ArrayList<>();
-    private List<Param> params = new ArrayList<>();
     private DateConf dateInfo;
     private Long limit = 2000L;
     private QueryType queryType = QueryType.ID;
-    private Cache cacheInfo;
     private Long tenantId;
 
     /**
@@ -73,23 +64,6 @@ public class QueryStructReq {
      * Later deleted for compatibility only
      */
     private String correctS2SQL;
-
-    public void setModelId(Long modelId) {
-        modelIds = new HashSet<>();
-        modelIds.add(modelId);
-    }
-
-    public List<Long> getModelIds() {
-        return Lists.newArrayList(modelIds);
-    }
-
-    public String getModelIdStr() {
-        return String.join(",", modelIds.stream().map(Object::toString).collect(Collectors.toList()));
-    }
-
-    public Set<Long> getModelIdSet() {
-        return modelIds;
-    }
 
     public List<String> getGroups() {
         if (!CollectionUtils.isEmpty(this.groups)) {
@@ -116,13 +90,6 @@ public class QueryStructReq {
             return Lists.newArrayList();
         }
         return orders;
-    }
-
-    public List<Param> getParams() {
-        if (params == null) {
-            return Lists.newArrayList();
-        }
-        return params;
     }
 
     public String toCustomizedString() {
@@ -186,28 +153,32 @@ public class QueryStructReq {
         return sb.toString();
     }
 
+    public QuerySqlReq convert(QueryStructReq queryStructReq) {
+        return convert(queryStructReq, false);
+    }
+
     /**
      * convert queryStructReq to QueryS2QLReq
      *
      * @param queryStructReq
      * @return
      */
-    public QueryS2SQLReq convert(QueryStructReq queryStructReq) {
+    public QuerySqlReq convert(QueryStructReq queryStructReq, boolean isBizName) {
         String sql = null;
         try {
-            sql = buildSql(queryStructReq);
+            sql = buildSql(queryStructReq, isBizName);
         } catch (Exception e) {
             log.error("buildSql error", e);
         }
 
-        QueryS2SQLReq result = new QueryS2SQLReq();
+        QuerySqlReq result = new QuerySqlReq();
         result.setSql(sql);
         result.setModelIds(queryStructReq.getModelIdSet());
-        result.setVariables(new HashMap<>());
+        result.setParams(new ArrayList<>());
         return result;
     }
 
-    private String buildSql(QueryStructReq queryStructReq) throws JSQLParserException {
+    private String buildSql(QueryStructReq queryStructReq, boolean isBizName) throws JSQLParserException {
         Select select = new Select();
         //1.Set the select items (columns)
         PlainSelect plainSelect = new PlainSelect();
@@ -286,7 +257,7 @@ public class QueryStructReq {
         //6.Set where
         List<Filter> dimensionFilters = queryStructReq.getDimensionFilters();
         SqlFilterUtils sqlFilterUtils = ContextUtils.getBean(SqlFilterUtils.class);
-        String whereClause = sqlFilterUtils.getWhereClause(dimensionFilters, false);
+        String whereClause = sqlFilterUtils.getWhereClause(dimensionFilters, isBizName);
 
         String sql = select.toString();
         if (StringUtils.isNotBlank(whereClause)) {
@@ -302,6 +273,10 @@ public class QueryStructReq {
             sql = SqlParserAddHelper.addWhere(sql, expression);
         }
         return sql;
+    }
+
+    public String getModelName() {
+        return Objects.nonNull(modelName) ? modelName : "m_" + String.valueOf(StringUtils.join(modelIds, "_"));
     }
 
 }

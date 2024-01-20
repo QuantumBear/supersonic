@@ -33,7 +33,7 @@ public class FunctionCallParser extends PluginParser {
         String functionUrl = functionCallConfig.getUrl();
         if (StringUtils.isBlank(functionUrl) && ComponentFactory.getLLMProxy() instanceof PythonLLMProxy) {
             log.info("functionUrl:{}, skip function parser, queryText:{}", functionUrl,
-                    queryContext.getRequest().getQueryText());
+                    queryContext.getQueryText());
             return false;
         }
         List<Plugin> plugins = getPluginList(queryContext);
@@ -57,7 +57,10 @@ public class FunctionCallParser extends PluginParser {
         Pair<Boolean, Set<Long>> pluginResolveResult = PluginManager.resolve(plugin, queryContext);
         if (pluginResolveResult.getLeft()) {
             Set<Long> modelList = pluginResolveResult.getRight();
-            double score = queryContext.getRequest().getQueryText().length();
+            if (CollectionUtils.isEmpty(modelList)) {
+                return null;
+            }
+            double score = queryContext.getQueryText().length();
             return PluginRecallResult.builder().plugin(plugin).modelIds(modelList).score(score).build();
         }
         return null;
@@ -65,7 +68,7 @@ public class FunctionCallParser extends PluginParser {
 
     public FunctionResp functionCall(QueryContext queryContext) {
         List<PluginParseConfig> pluginToFunctionCall =
-                getPluginToFunctionCall(queryContext.getRequest().getModelId(), queryContext);
+                getPluginToFunctionCall(queryContext.getModelId(), queryContext);
         if (CollectionUtils.isEmpty(pluginToFunctionCall)) {
             log.info("function call parser, plugin is empty, skip");
             return null;
@@ -75,7 +78,7 @@ public class FunctionCallParser extends PluginParser {
             functionResp.setToolSelection(pluginToFunctionCall.iterator().next().getName());
         } else {
             FunctionReq functionReq = FunctionReq.builder()
-                    .queryText(queryContext.getRequest().getQueryText())
+                    .queryText(queryContext.getQueryText())
                     .pluginConfigs(pluginToFunctionCall).build();
             functionResp = ComponentFactory.getLLMProxy().requestFunction(functionReq);
         }

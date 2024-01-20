@@ -1,6 +1,7 @@
 package com.tencent.supersonic.headless.core.parser.calcite.schema;
 
 
+import com.tencent.supersonic.headless.api.enums.EngineType;
 import com.tencent.supersonic.headless.core.parser.calcite.Configuration;
 import com.tencent.supersonic.headless.core.parser.calcite.sql.S2SQLSqlValidatorImpl;
 
@@ -37,8 +38,9 @@ public class SchemaBuilder {
                 Configuration.typeFactory,
                 Configuration.config
         );
+        EngineType engineType = EngineType.fromString(schema.getSemanticModel().getDatabase().getType());
         S2SQLSqlValidatorImpl s2SQLSqlValidator = new S2SQLSqlValidatorImpl(Configuration.operatorTable, catalogReader,
-                Configuration.typeFactory, Configuration.validatorConfig);
+                Configuration.typeFactory, Configuration.getValidatorConfig(engineType));
         return new ParameterScope(s2SQLSqlValidator, nameToTypeMap);
     }
 
@@ -66,13 +68,13 @@ public class SchemaBuilder {
         String db = dbSrc.toLowerCase();
         DataSourceTable.Builder builder = DataSourceTable.newBuilder(tb);
         for (String date : dates) {
-            builder.addField(date.toLowerCase(), SqlTypeName.VARCHAR);
+            builder.addField(date, SqlTypeName.VARCHAR);
         }
         for (String dim : dimensions) {
-            builder.addField(dim.toLowerCase(), SqlTypeName.VARCHAR);
+            builder.addField(dim, SqlTypeName.VARCHAR);
         }
         for (String metric : metrics) {
-            builder.addField(metric.toLowerCase(), SqlTypeName.BIGINT);
+            builder.addField(metric, SqlTypeName.BIGINT);
         }
         DataSourceTable srcTable = builder
                 .withRowCount(1)

@@ -1,11 +1,13 @@
 package com.tencent.supersonic.headless.core.parser;
 
+import com.google.common.base.Strings;
 import com.tencent.supersonic.common.util.StringUtil;
 import com.tencent.supersonic.headless.api.enums.AggOption;
 import com.tencent.supersonic.headless.api.pojo.MetricTable;
 import com.tencent.supersonic.headless.api.request.MetricQueryReq;
 import com.tencent.supersonic.headless.api.request.ParseSqlReq;
 import com.tencent.supersonic.headless.api.request.QueryStructReq;
+import com.tencent.supersonic.headless.api.request.SqlExecuteReq;
 import com.tencent.supersonic.headless.core.pojo.QueryStatement;
 import com.tencent.supersonic.headless.core.utils.ComponentFactory;
 import java.util.ArrayList;
@@ -26,7 +28,7 @@ import org.springframework.util.CollectionUtils;
 @Primary
 public class QueryParser {
 
-    public QueryStatement logicSql(QueryStatement queryStatement) throws Exception {
+    public QueryStatement parse(QueryStatement queryStatement) throws Exception {
         QueryStructReq queryStructReq = queryStatement.getQueryStructReq();
         if (Objects.isNull(queryStatement.getParseSqlReq())) {
             queryStatement.setParseSqlReq(new ParseSqlReq());
@@ -44,12 +46,22 @@ public class QueryParser {
         log.info("SemanticConverter after {} {} {}", queryStructReq, queryStatement.getParseSqlReq(),
                 queryStatement.getMetricReq());
         if (!queryStatement.getParseSqlReq().getSql().isEmpty()) {
-            return parser(queryStatement.getParseSqlReq(), queryStatement);
+            queryStatement = parser(queryStatement.getParseSqlReq(), queryStatement);
+        } else {
+            queryStatement.getMetricReq().setNativeQuery(queryStructReq.getQueryType().isNativeAggQuery());
+            queryStatement = parser(queryStatement);
         }
-
-        queryStatement.getMetricReq().setNativeQuery(queryStructReq.getQueryType().isNativeAggQuery());
-        return parser(queryStatement);
-
+        if (Strings.isNullOrEmpty(queryStatement.getSql())
+                || Strings.isNullOrEmpty(queryStatement.getSourceId())) {
+            throw new RuntimeException("parse Exception: " + queryStatement.getErrMsg());
+        }
+        String querySql =
+                Objects.nonNull(queryStatement.getEnableLimitWrapper()) && queryStatement.getEnableLimitWrapper()
+                        ? String.format(SqlExecuteReq.LIMIT_WRAPPER,
+                        queryStatement.getSql())
+                        : queryStatement.getSql();
+        queryStatement.setSql(querySql);
+        return queryStatement;
     }
 
     public QueryStatement parser(ParseSqlReq parseSqlReq, QueryStatement queryStatement) {
@@ -105,8 +117,7 @@ public class QueryParser {
             return queryStatement;
         }
         try {
-            queryStatement = ComponentFactory.getSqlParser().explain(queryStatement, isAgg);
-            return queryStatement;
+            return ComponentFactory.getSqlParser().explain(queryStatement, isAgg);
         } catch (Exception e) {
             queryStatement.setErrMsg(e.getMessage());
             log.error("parser error metricQueryReq[{}] error [{}]", metricQueryReq, e);

@@ -2,7 +2,6 @@ package com.tencent.supersonic.chat.core.corrector;
 
 import com.google.common.collect.Lists;
 import com.tencent.supersonic.auth.api.authentication.pojo.User;
-import com.tencent.supersonic.chat.api.pojo.request.QueryReq;
 import com.tencent.supersonic.chat.core.pojo.QueryContext;
 import com.tencent.supersonic.chat.api.pojo.SchemaElement;
 import com.tencent.supersonic.chat.api.pojo.SchemaValueMap;
@@ -56,7 +55,7 @@ public class WhereCorrector extends BaseSemanticCorrector {
     }
 
     private void addQueryFilter(QueryContext queryContext, SemanticParseInfo semanticParseInfo) {
-        QueryFilter tenantQueryFilter = getTenantDefaultFilters(queryContext.getRequest(), semanticParseInfo);
+        QueryFilter tenantQueryFilter = getTenantDefaultFilters(queryContext, semanticParseInfo);
         if (Objects.nonNull(tenantQueryFilter)) {
             if (queryContext.getQueryFilters() == null) {
                 queryContext.setQueryFilters(new QueryFilters());
@@ -100,9 +99,9 @@ public class WhereCorrector extends BaseSemanticCorrector {
         semanticParseInfo.getSqlInfo().setCorrectS2SQL(correctS2SQL);
     }
 
-    private QueryFilter getTenantDefaultFilters(QueryReq queryReq,
+    private QueryFilter getTenantDefaultFilters(QueryContext queryContext,
             SemanticParseInfo semanticParseInfo) {
-        User user = queryReq.getUser();
+        User user = queryContext.getUser();
         if (Objects.isNull(user)) {
             return null;
         }
