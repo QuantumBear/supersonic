@@ -46,7 +46,7 @@ public class ChatKnowledgeTaskServiceImpl implements KnowledgeTaskService {
     private final FileHandler fileHandler;
     private final DictRepository dictRepository;
     private final ApplicationStartedListener applicationStartedListener;
-    private final UserService  userService;
+    private final UserService userService;
 
     @Value("${dict.flush.enable:true}")
     private Boolean dictFlushEnable;
