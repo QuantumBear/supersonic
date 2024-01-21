@@ -52,6 +52,7 @@ import com.tencent.supersonic.headless.server.service.AppService;
 import com.tencent.supersonic.headless.server.service.Catalog;
 import com.tencent.supersonic.headless.server.service.QueryService;
 import com.tencent.supersonic.headless.server.service.SchemaService;
+import com.tencent.supersonic.headless.server.utils.QueryStructUtils;
 import com.tencent.supersonic.headless.server.utils.StatUtils;
 import com.tencent.supersonic.headless.server.utils.QueryUtils;
 import lombok.SneakyThrows;
@@ -78,6 +79,7 @@ public class QueryServiceImpl implements QueryService {
 
     private final StatUtils statUtils;
     private final QueryUtils queryUtils;
+    private final QueryStructUtils queryStructUtils;
     private final QueryReqConverter queryReqConverter;
     private final Catalog catalog;
     private final AppService appService;
@@ -91,6 +93,7 @@ public class QueryServiceImpl implements QueryService {
     public QueryServiceImpl(
             StatUtils statUtils,
             QueryUtils queryUtils,
+            QueryStructUtils queryStructUtils,
             QueryReqConverter queryReqConverter,
             Catalog catalog,
             AppService appService,
@@ -100,6 +103,7 @@ public class QueryServiceImpl implements QueryService {
             QueryPlanner queryPlanner) {
         this.statUtils = statUtils;
         this.queryUtils = queryUtils;
+        this.queryStructUtils = queryStructUtils;
         this.queryReqConverter = queryReqConverter;
         this.catalog = catalog;
         this.appService = appService;
@@ -216,6 +220,10 @@ public class QueryServiceImpl implements QueryService {
         queryStatement.setModelIds(queryStatement.getQueryStructReq().getModelIds());
         SemanticModel semanticModel = semanticSchemaManager.get(queryStructReq.getModelIdStr());
         queryStatement.setSemanticModel(semanticModel);
+        if (!queryStructUtils.isModelHasTimeDims(queryStatement.getQueryStructReq())) {
+            // 如果模型上就没有时间维度，清除时间维度信息
+            queryStatement.getQueryStructReq().setDateInfo(null);
+        }
         return queryStatement;
     }
 
