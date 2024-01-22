@@ -12,7 +12,6 @@ import com.tencent.supersonic.common.pojo.DateConf;
 import com.tencent.supersonic.common.pojo.DateConf.DateMode;
 import com.tencent.supersonic.common.pojo.ItemDateResp;
 import com.tencent.supersonic.common.pojo.enums.TypeEnums;
-import com.tencent.supersonic.common.util.ContextUtils;
 import com.tencent.supersonic.common.util.DateModeUtils;
 import com.tencent.supersonic.common.util.SqlFilterUtils;
 import com.tencent.supersonic.common.util.jsqlparser.FieldExpression;
@@ -26,7 +25,6 @@ import com.tencent.supersonic.headless.api.response.DimSchemaResp;
 import com.tencent.supersonic.headless.api.response.DimensionResp;
 import com.tencent.supersonic.headless.api.response.MetricResp;
 import com.tencent.supersonic.headless.api.response.MetricSchemaResp;
-import com.tencent.supersonic.headless.api.response.ModelResp;
 import com.tencent.supersonic.headless.api.response.ModelSchemaResp;
 import com.tencent.supersonic.headless.server.pojo.MetaFilter;
 import com.tencent.supersonic.headless.server.service.Catalog;
@@ -47,7 +45,6 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Triple;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -68,18 +65,20 @@ public class QueryStructUtils {
     private final DateModeUtils dateModeUtils;
     private final SqlFilterUtils sqlFilterUtils;
     private final Catalog catalog;
-    @Autowired
-    private SchemaService schemaService;
+    private final SchemaService schemaService;
 
     private String variablePrefix = "'${";
 
     public QueryStructUtils(
             DateModeUtils dateModeUtils,
-            SqlFilterUtils sqlFilterUtils, Catalog catalog) {
+            SqlFilterUtils sqlFilterUtils,
+            Catalog catalog,
+            SchemaService schemaService) {
 
         this.dateModeUtils = dateModeUtils;
         this.sqlFilterUtils = sqlFilterUtils;
         this.catalog = catalog;
+        this.schemaService = schemaService;
     }
 
     private List<Long> getDimensionIds(QueryStructReq queryStructCmd) {
@@ -121,7 +120,6 @@ public class QueryStructUtils {
         }
         return metricIds;
     }
-
 
     public Set<String> getResNameEn(QueryStructReq queryStructCmd) {
         Set<String> resNameEnSet = new HashSet<>();

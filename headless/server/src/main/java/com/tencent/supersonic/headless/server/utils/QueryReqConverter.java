@@ -5,6 +5,7 @@ import com.tencent.supersonic.common.pojo.Constants;
 import com.tencent.supersonic.common.pojo.enums.AggOperatorEnum;
 import com.tencent.supersonic.common.pojo.enums.QueryType;
 import com.tencent.supersonic.common.pojo.enums.TimeDimensionEnum;
+import com.tencent.supersonic.common.util.ContextUtils;
 import com.tencent.supersonic.common.util.jsqlparser.SqlParserReplaceHelper;
 import com.tencent.supersonic.common.util.jsqlparser.SqlParserSelectFunctionHelper;
 import com.tencent.supersonic.common.util.jsqlparser.SqlParserSelectHelper;
@@ -40,7 +41,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -52,14 +52,16 @@ public class QueryReqConverter {
     @Value("${query.sql.limitWrapper:true}")
     private Boolean limitWrapper;
 
-    @Autowired
-    private QueryStructUtils queryStructUtils;
+    private final SqlGenerateUtils sqlGenerateUtils;
 
-    @Autowired
-    private SqlGenerateUtils sqlGenerateUtils;
+    private final Catalog catalog;
 
-    @Autowired
-    private Catalog catalog;
+    public QueryReqConverter(
+            SqlGenerateUtils sqlGenerateUtils,
+            Catalog catalog) {
+        this.sqlGenerateUtils = sqlGenerateUtils;
+        this.catalog = catalog;
+    }
 
     public QueryStatement convert(QuerySqlReq querySQLReq,
             List<ModelSchemaResp> modelSchemaResps) throws Exception {
@@ -123,6 +125,7 @@ public class QueryReqConverter {
         //5. do deriveMetric
         generateDerivedMetric(querySQLReq.getModelIds(), modelSchemaResps, result);
         //6.physicalSql by ParseSqlReq
+        QueryStructUtils queryStructUtils = ContextUtils.getBean(QueryStructUtils.class);
         queryStructReq.setDateInfo(queryStructUtils.getDateConfBySql(querySQLReq.getSql()));
         queryStructReq.setModelIds(new HashSet<>(querySQLReq.getModelIds()));
         queryStructReq.setQueryType(getQueryType(aggOption));
