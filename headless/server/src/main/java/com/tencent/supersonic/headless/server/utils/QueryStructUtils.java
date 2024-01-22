@@ -29,9 +29,7 @@ import com.tencent.supersonic.headless.api.response.MetricSchemaResp;
 import com.tencent.supersonic.headless.api.response.ModelResp;
 import com.tencent.supersonic.headless.api.response.ModelSchemaResp;
 import com.tencent.supersonic.headless.server.pojo.MetaFilter;
-import com.tencent.supersonic.headless.server.pojo.ModelFilter;
 import com.tencent.supersonic.headless.server.service.Catalog;
-import com.tencent.supersonic.headless.server.service.ModelService;
 import com.tencent.supersonic.headless.server.service.SchemaService;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -124,17 +122,6 @@ public class QueryStructUtils {
         return metricIds;
     }
 
-    public boolean isModelHasTimeDims(QueryStructReq queryStructCmd) {
-        ModelService modelService = ContextUtils.getBean(ModelService.class);
-        ModelFilter modelFilter = new ModelFilter();
-        modelFilter.setIds(queryStructCmd.getModelIds());
-        List<ModelResp> modelSchemaResps = modelService.getModelList(modelFilter);
-        if (CollectionUtils.isEmpty(modelSchemaResps)) {
-            return false;
-        }
-        return modelSchemaResps.stream()
-                .anyMatch(modelSchemaResp -> modelSchemaResp.getModelDetail().filterTimeDims().size() > 0);
-    }
 
     public Set<String> getResNameEn(QueryStructReq queryStructCmd) {
         Set<String> resNameEnSet = new HashSet<>();

@@ -7,16 +7,21 @@ import com.tencent.supersonic.common.pojo.Aggregator;
 import com.tencent.supersonic.common.pojo.Constants;
 import com.tencent.supersonic.common.pojo.QueryColumn;
 import com.tencent.supersonic.common.pojo.enums.TimeDimensionEnum;
+import com.tencent.supersonic.common.util.ContextUtils;
 import com.tencent.supersonic.headless.api.enums.SemanticType;
 import com.tencent.supersonic.headless.api.request.QueryMultiStructReq;
+import com.tencent.supersonic.headless.api.request.QueryStructReq;
 import com.tencent.supersonic.headless.api.response.DimensionResp;
 import com.tencent.supersonic.headless.api.response.MetricResp;
+import com.tencent.supersonic.headless.api.response.ModelResp;
 import com.tencent.supersonic.headless.api.response.SemanticQueryResp;
 import com.tencent.supersonic.headless.core.pojo.QueryStatement;
 import com.tencent.supersonic.headless.core.utils.SqlGenerateUtils;
 import com.tencent.supersonic.headless.server.cache.CacheManager;
 import com.tencent.supersonic.headless.server.pojo.MetaFilter;
+import com.tencent.supersonic.headless.server.pojo.ModelFilter;
 import com.tencent.supersonic.headless.server.service.Catalog;
+import com.tencent.supersonic.headless.server.service.ModelService;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -243,5 +248,17 @@ public class QueryUtils {
 
     public Boolean enableOptimize() {
         return optimizeEnable;
+    }
+
+    public boolean isModelHasTimeDims(QueryStructReq queryStructCmd) {
+        ModelService modelService = ContextUtils.getBean(ModelService.class);
+        ModelFilter modelFilter = new ModelFilter();
+        modelFilter.setIds(queryStructCmd.getModelIds());
+        List<ModelResp> modelSchemaResps = modelService.getModelList(modelFilter);
+        if (CollectionUtils.isEmpty(modelSchemaResps)) {
+            return false;
+        }
+        return modelSchemaResps.stream()
+            .anyMatch(modelSchemaResp -> modelSchemaResp.getModelDetail().filterTimeDims().size() > 0);
     }
 }
