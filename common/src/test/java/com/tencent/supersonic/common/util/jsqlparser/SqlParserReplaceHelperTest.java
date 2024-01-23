@@ -482,13 +482,13 @@ class SqlParserReplaceHelperTest {
     @Test
     void replaceDateRange() {
         String sql = "select 部门, sum(访问次数) as 总访问次数 from 超音数 where "
-            + "数据日期 <= '2023-09-05' group by 部门 order by 总访问次数 desc limit 10";
+                + "数据日期 <= '2023-09-05' group by 部门 order by 总访问次数 desc limit 10";
         String replaceSql = SqlParserReplaceHelper.replaceDateRange(sql);
         System.out.println(replaceSql);
         Assert.assertEquals(
-            "SELECT 部门, sum(访问次数) AS 总访问次数 FROM 超音数 WHERE 数据日期 <= '2023-09-06' "
-                    + "GROUP BY 部门 ORDER BY 总访问次数 DESC LIMIT 10",
-            replaceSql);
+                "SELECT 部门, sum(访问次数) AS 总访问次数 FROM 超音数 WHERE 数据日期 <= '2023-09-06' "
+                        + "GROUP BY 部门 ORDER BY 总访问次数 DESC LIMIT 10",
+                replaceSql);
     }
 
     private Map<String, String> initParams() {
