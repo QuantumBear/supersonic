@@ -11,26 +11,25 @@ import java.time.format.DateTimeFormatter;
 @Slf4j
 public class DateRangeReplaceVisitor extends ExpressionVisitorAdapter {
 
-  @Override
-  public void visit(MinorThanEquals expr) {
-    super.visit(expr);
-    String date = expr.getRightExpression().toString();
-    log.info("right value:{}", date);
-    Optional<String> nextDay = getNextDay(date);
-    nextDay.ifPresent(s -> expr.setRightExpression(new StringValue(s)));
-  }
-
-
-  public static Optional<String> getNextDay(String originDate) {
-    String date = originDate.replace("'", "");
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    try {
-      LocalDate localDate = LocalDate.parse(date, formatter);
-      localDate = localDate.plusDays(1);
-      return Optional.of(localDate.format(formatter));
-    } catch (Exception e) {
-      log.error("parse date error:{}", date, e);
-      return Optional.empty();
+    @Override
+    public void visit(MinorThanEquals expr) {
+        super.visit(expr);
+        String date = expr.getRightExpression().toString();
+        log.info("DateRange right value:{}", date);
+        Optional<String> nextDay = getNextDay(date);
+        nextDay.ifPresent(s -> expr.setRightExpression(new StringValue(s)));
     }
-  }
+
+    public static Optional<String> getNextDay(String originDate) {
+        String date = originDate.replace("'", "");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        try {
+            LocalDate localDate = LocalDate.parse(date, formatter);
+            localDate = localDate.plusDays(1);
+            return Optional.of(localDate.format(formatter));
+        } catch (Exception e) {
+            log.error("parse date error:{}", date, e);
+            return Optional.empty();
+        }
+    }
 }
