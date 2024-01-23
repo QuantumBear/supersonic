@@ -22,5 +22,13 @@
         "sql":"select count(distinct 商机id) from 商机 where 预计赢单时间 >= '2023-12-01' and 预计赢单时间 <= '2023-12-18'",
         "generatedSchemaLinkingCoT":"Let's think step by step. In the question \"预计赢单时间在本月的商机有多少(补充信息:当前的日期是2023-12-18)\"，we are asked：\n\"预计赢单时间在本月\"，so we need column=[预计赢单时间]\n\"商机数\"，so we need column=[商机id]\nBased on the tables, columns, and Foreign_keys, The set of possible cell values are = [本月,预计赢单时间,商机id,2024-12-18]. So the Schema_links are:\nSchema_links: [预计赢单时间,商机,商机id,本月,2023-12-18]",
         "generatedSchemaLinkings": "[商机id,预计赢单时间,本月,2023-12-18]"
+    },
+    {
+        "question":"本月赢单数据",
+        "questionAugmented":"本月赢单数据 (补充信息:’'赢单'‘是一个’商机阶段‘。当前的日期是2023-12-18) (备注: )",
+        "dbSchema": "Table: 商机, Columns = [\"部门\", \"商机阶段\",\"数据日期\", \"商机id\", \"赢单时间\", \"赢单金额\", \"企业\", \"丢单原因\",\"预计赢单时间\",\"丢单时间\",\"丢单原因\"]\nForeign_keys: []",
+        "sql":"select 赢单时间,sum(赢单金额) from 商机 where 赢单时间 >= '2023-12-01' and 赢单时间 <= '2023-12-18' group by 赢单时间",
+        "generatedSchemaLinkingCoT":"Let's think step by step. In the question \"本月赢单数据(补充信息:’'赢单'‘是一个’商机阶段‘。当前的日期是2023-12-18)\"，we are asked：\n\"本月\"，so we need column=[赢单时间],\n\"赢单\"，so we need column=[商机阶段],\n\"赢单数据\"，so we need column=[赢单金额]\nBased on the tables, columns, and Foreign_keys, The set of possible cell values are = [本月,赢单时间,赢单金额,2024-12-18]. So the Schema_links are:\nSchema_links: [赢单金额,赢单时间,本月,2023-12-18]",
+        "generatedSchemaLinkings": "[赢单金额,赢单时间,本月,2023-12-18]"
     }
 ]
