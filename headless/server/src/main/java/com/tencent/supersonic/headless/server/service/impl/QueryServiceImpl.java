@@ -216,7 +216,9 @@ public class QueryServiceImpl implements QueryService {
         queryStatement.setModelIds(queryStatement.getQueryStructReq().getModelIds());
         SemanticModel semanticModel = semanticSchemaManager.get(queryStructReq.getModelIdStr());
         queryStatement.setSemanticModel(semanticModel);
-        if (!queryUtils.isModelHasTimeDims(queryStatement.getQueryStructReq())) {
+        if (!queryUtils.isModelHasTimeDims(queryStatement.getQueryStructReq())
+                || (queryStatement.getQueryStructReq().getDateInfo() != null
+                && queryStatement.getQueryStructReq().getDateInfo().getUnit() < 0)) {
             // 如果模型上就没有时间维度，清除时间维度信息
             queryStatement.getQueryStructReq().setDateInfo(null);
         }
