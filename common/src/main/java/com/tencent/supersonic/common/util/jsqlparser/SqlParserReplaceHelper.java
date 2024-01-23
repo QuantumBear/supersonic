@@ -323,6 +323,22 @@ public class SqlParserReplaceHelper {
         return selectStatement.toString();
     }
 
+    public static String replaceDateRange(String sql) {
+        Select selectStatement = SqlParserSelectHelper.getSelect(sql);
+        SelectBody selectBody = selectStatement.getSelectBody();
+        if (!(selectBody instanceof PlainSelect)) {
+            return sql;
+        }
+        Expression where = ((PlainSelect) selectBody).getWhere();
+        try {
+            where.accept(new DateRangeReplaceVisitor());
+        } catch (Exception e) {
+            log.info("replaceDateRange has an exception:{}", e.toString());
+        }
+
+        return selectStatement.toString();
+    }
+
     private static void replaceHavingFunction(Map<String, String> functionMap, Expression having) {
         if (Objects.nonNull(having)) {
             if (having instanceof AndExpression) {

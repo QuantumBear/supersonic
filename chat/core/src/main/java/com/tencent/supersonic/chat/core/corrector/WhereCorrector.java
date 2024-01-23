@@ -49,6 +49,8 @@ public class WhereCorrector extends BaseSemanticCorrector {
 
         parserDateDiffFunction(semanticParseInfo);
 
+        replaceDateRange(semanticParseInfo);
+
         addQueryFilter(queryContext, semanticParseInfo);
 
         updateFieldValueByTechName(queryContext, semanticParseInfo);
@@ -82,6 +84,12 @@ public class WhereCorrector extends BaseSemanticCorrector {
     private void parserDateDiffFunction(SemanticParseInfo semanticParseInfo) {
         String correctS2SQL = semanticParseInfo.getSqlInfo().getCorrectS2SQL();
         correctS2SQL = SqlParserReplaceHelper.replaceFunction(correctS2SQL);
+        semanticParseInfo.getSqlInfo().setCorrectS2SQL(correctS2SQL);
+    }
+
+    private void replaceDateRange(SemanticParseInfo semanticParseInfo) {
+        String correctS2SQL = semanticParseInfo.getSqlInfo().getCorrectS2SQL();
+        correctS2SQL = SqlParserReplaceHelper.replaceDateRange(correctS2SQL);
         semanticParseInfo.getSqlInfo().setCorrectS2SQL(correctS2SQL);
     }
 
