@@ -80,10 +80,16 @@ public class ChatKnowledgeTaskServiceImpl implements KnowledgeTaskService {
         dimValue2DictCommend.setUpdateMode(DictUpdateMode.OFFLINE_FULL);
 
         List<User> users = userService.getUserList();
-
-        users.stream().filter(user -> user.getTenantId() > 0).forEach(user -> {
-            addDictTask(dimValue2DictCommend, user);
+        // group by tenant_id
+        Map<Long, User> tenantId2UserMap = new HashMap<>();
+        users.forEach(user -> {
+            if (user.getTenantId() > 0 && user.getIsAdmin() == 1) {
+                tenantId2UserMap.put(user.getTenantId(), user);
+            }
         });
+
+        tenantId2UserMap.values().stream().filter(user -> user.getTenantId() > 0)
+                .forEach(user -> addDictTask(dimValue2DictCommend, user));
         log.info("[dailyDictTask] finish");
         return true;
     }
